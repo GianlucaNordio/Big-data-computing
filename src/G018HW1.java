@@ -8,7 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class G018HW1{
-    static void ExactOutliers(List<Tuple2<Float, Float>> listOfPoints, float D, int M, int K) {
+    //TODO check if Tuple2 is okay (prof states just: "Specifically, ExactOutliers takes as input a list of points")
+    static void ExactOutliers(List<Tuple2<Float, Float>> listOfPoints, float D, int M, int K) { 
         // Implement ExactOutliers logic here
         System.out.println("Executing ExactOutliers with parameters: D=" + D + ", M=" + M + ", K=" + K);
         // Add your code here
