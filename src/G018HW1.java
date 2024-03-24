@@ -2,10 +2,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
-
-import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,10 +12,17 @@ import java.util.List;
 import static com.google.common.primitives.Longs.min;
 
 public class G018HW1{
+    /*
+        Computes the number of exact outliers based on
+        - list of points in input
+        - distance defining when to count a point as close
+        - number of points close in order to not be an outlier
+        - number of outliers to show (if enough points are available)
+    */
     static void ExactOutliers(List<Point2D> listOfPoints, double D, int M, int K) {
         System.out.println("Executing ExactOutliers with parameters: D=" + D + ", M=" + M + ", K=" + K);
 
-        // Create a Map to count the number of points under the distance for each point
+        // Create a map storing (point, number of points which have distance <= D from the point as key)
         Map<Point2D, Long> counts = new HashMap<>();
 
         for(int i = 0; i < listOfPoints.size(); i++) {
@@ -32,8 +36,8 @@ public class G018HW1{
             }
         }
 
+        // Compute number of outliers
         long numberOfOutliers = 0L;
-
         for( Long l : counts.values()){
             if(l < M)
                 numberOfOutliers++;
@@ -41,11 +45,13 @@ public class G018HW1{
 
         System.out.println("The number of sure (D,M)-outliers is " + numberOfOutliers);
 
+        // The first K elements (or the available points) are shown sorted by number of elements at distance <= D
         List<Map.Entry<Point2D, Long>> orderedOutliers = new ArrayList<>(counts.entrySet());
-
         orderedOutliers.sort(Map.Entry.comparingByValue());
-        
 
+        //TODO having this loop that prints inside here means it's calculated in the time for execution
+        //making the result no-sense (we may for example return an ArrayList and show the result outside or move
+        //the computation of the time inside the method
         for(int i = 0; i < min(K, numberOfOutliers); i++) {
             Point2D point = orderedOutliers.get(i).getKey();
             System.out.println("(" + point.getX() + "," + point.getY() +")");
@@ -54,16 +60,17 @@ public class G018HW1{
     public static void MRApproxOutliers(JavaRDD<Point2D> pointsRDD, double D, int M, int K) {
         System.out.println("Executing MRApproxOutliers with parameters: D=" + D + ", M=" + M + ", K=" + K);
 
-        // Step A: Transform input RDD into RDD of non-empty cells
+        // Input RDD: points
+        // Output RDD: (i,j) is the key and number of points in that square is the value
         JavaPairRDD<Tuple2<Integer, Integer>, Integer> cellRDD = pointsRDD.mapToPair(point -> {
             int i = (int) Math.floor(point.getX() / (D / (2 * Math.sqrt(2))));
             int j = (int) Math.floor(point.getY() / (D / (2 * Math.sqrt(2))));
             return new Tuple2<>(new Tuple2<>(i, j), 1);
-        }).reduceByKey(Integer::sum);
+        }).reduceByKey(Integer::sum); //TODO understand if here we need to cache the RDD (probably yes)
 
+        // Computation of |N3(C)| and |N7(C)|
         List<Tuple2<Tuple2<Integer, Integer>, Integer>> cellList = cellRDD.collect();
-
-        // Step B: Attach |N3(C)| and |N7(C)| to each cell
+        //TODO check if here we should use a JavaPairRDD instead of a JavaRDD (also change the method map)
         JavaRDD<Tuple2<Tuple2<Tuple2<Integer, Integer>, Integer>, Tuple2<Integer, Integer>>> cellInfoRDD = cellRDD.map(cell -> {
             int i = cell._1()._1();
             int j = cell._1()._2();
@@ -72,19 +79,23 @@ public class G018HW1{
             return new Tuple2<>(new Tuple2<>(cell._1(), cell._2()), new Tuple2<>(N3, N7));
         });
 
-        // Compute and print results
+       // Compute the number of sure outliers
         long sureOutliers = cellInfoRDD.filter(cell -> {
             int N7 = cell._2()._2();
             return N7 <= M;
         }).count();
 
+        // Compute the number of uncertain outliers
         long uncertainPoints = cellInfoRDD.filter(cell -> {
             int N3 = cell._2()._1();
             int N7 = cell._2()._2();
             return (N3 <= M && N7 > M);
         }).count();
 
-        List<Tuple2<Tuple2<Integer, Integer>, Integer>> sortedCells = cellRDD.mapToPair(pair -> new Tuple2<>(pair._2, pair._1 )).sortByKey().mapToPair(pair -> new Tuple2<>(pair._2, pair._1)).take(K);
+        List<Tuple2<Tuple2<Integer, Integer>, Integer>> sortedCells = cellRDD.mapToPair(pair -> new Tuple2<>(pair._2, pair._1 ))
+                .sortByKey()
+                .mapToPair(pair -> new Tuple2<>(pair._2, pair._1))
+                .take(K);
 
         // Print results
         System.out.println("Number of sure (" + D + "," + M + ")-outliers: " + sureOutliers);
@@ -94,7 +105,7 @@ public class G018HW1{
     }
 
 
-    // Helper method to calculate N3
+    // Computes the number of elements in the area of size 3x3 around a cell
     public static int calculateN3(Tuple2<Integer, Integer> cell, Iterable<Tuple2<Tuple2<Integer, Integer>, Integer>> cellRDD) {
         int i = cell._1();
         int j = cell._2();
@@ -109,6 +120,7 @@ public class G018HW1{
         return count;
     }
 
+    // Computes the number of elements in the area of size 7x7 around a cell 
     public static int calculateN7(Tuple2<Integer, Integer> cell, Iterable<Tuple2<Tuple2<Integer, Integer>, Integer>> cellRDD) {
         int i = cell._1();
         int j = cell._2();
@@ -116,6 +128,7 @@ public class G018HW1{
         for (Tuple2<Tuple2<Integer, Integer>, Integer> neighbor : cellRDD) {
             int x = neighbor._1()._1();
             int y = neighbor._1()._2();
+            // TODO I'm quite sure here we should NOT use distance 1
             if ((Math.abs(x - i) <= 1) && (Math.abs(y - j) <= 1) && (x != i || y != j)) {
                 count++;
             }
