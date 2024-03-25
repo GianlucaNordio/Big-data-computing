@@ -7,3 +7,4 @@ TODO LIST:
     the System.out.println())
 - check the distance in the method calculateN7
 - ask if it's okay to use double instead of float
+- fix the fact of counting doublicate element as a single one for the MapReduce
