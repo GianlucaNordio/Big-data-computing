@@ -3,6 +3,8 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,25 +27,24 @@ public class G018HW1{
         long startTimeExact = System.currentTimeMillis();
 
         // Create a map storing (point, number of points which have distance <= D from the point as key)
-        Map<Point2D, Long> counts = new HashMap<>();
-
+        Map<Integer, Long> counts = new HashMap<>();
 
         for(int i = 0; i < listOfPoints.size(); i++) {
-            Point2D x = listOfPoints.get(i);
-            counts.put(x, 1L + counts.getOrDefault(x, 0L));
+            counts.put(i, 1L + counts.getOrDefault(i, 0L));
             for (int j = i + 1; j < listOfPoints.size(); j++) {
+                Point2D x = listOfPoints.get(i);
                 Point2D y = listOfPoints.get(j);
                 if (x.distance(y) <= D) {
-                    counts.put(x, 1L + counts.getOrDefault(x, 0L));
-                    counts.put(y, 1L + counts.getOrDefault(y, 0L));
+                    counts.put(i, 1L + counts.getOrDefault(i, 0L));
+                    counts.put(j, 1L + counts.getOrDefault(j, 0L));
                 }
             }
         }
 
         // Compute number of outliers
         long numberOfOutliers = 0L;
-        for( Long l : counts.values()){
-            if(l < M)
+        for(Long l : counts.values()){
+            if(l <= M)
                 numberOfOutliers++;
         }
 
@@ -52,11 +53,12 @@ public class G018HW1{
         System.out.println("The number of sure (D,M)-outliers is " + numberOfOutliers);
 
         // The first K elements (or the available points) are shown sorted by number of elements at distance <= D
-        List<Map.Entry<Point2D, Long>> orderedOutliers = new ArrayList<>(counts.entrySet());
+        List<Map.Entry<Integer, Long>> orderedOutliers = new ArrayList<>(counts.entrySet());
         orderedOutliers.sort(Map.Entry.comparingByValue());
 
         for(int i = 0; i < min(K, numberOfOutliers); i++) {
-            Point2D point = orderedOutliers.get(i).getKey();
+            int index = orderedOutliers.get(i).getKey();
+            Point2D point = listOfPoints.get(index);
             System.out.println("(" + point.getX() + "," + point.getY() +")");
         }
 
@@ -67,37 +69,37 @@ public class G018HW1{
 
         // Input RDD: points
         // Output RDD: (i,j) is the key and number of points in that square is the value
-        JavaPairRDD<Tuple2<Integer, Integer>, Integer> cellRDD = pointsRDD.mapToPair(point -> {
-            int i = (int) Math.floor(point.getX() / (D / (2 * Math.sqrt(2))));
-            int j = (int) Math.floor(point.getY() / (D / (2 * Math.sqrt(2))));
-            return new Tuple2<>(new Tuple2<>(i, j), 1);
-        }).reduceByKey(Integer::sum).cache();
+        JavaPairRDD<Tuple2<Long, Long>, Long> cellRDD = pointsRDD.mapToPair(point -> {
+            long i = (long) Math.floor(point.getX() / (D / (2 * Math.sqrt(2))));
+            long j = (long) Math.floor(point.getY() / (D / (2 * Math.sqrt(2))));
+            return new Tuple2<>(new Tuple2<>(i, j), 1L);
+        }).reduceByKey(Long::sum).cache();
 
         // Computation of |N3(C)| and |N7(C)|
-        List<Tuple2<Tuple2<Integer, Integer>, Integer>> cellList = cellRDD.collect();
+        List<Tuple2<Tuple2<Long, Long>, Long>> cellList = cellRDD.collect();
         //TODO check if here we should use a JavaPairRDD instead of a JavaRDD (also change the method map)
-        JavaRDD<Tuple2<Tuple2<Tuple2<Integer, Integer>, Integer>, Tuple2<Integer, Integer>>> cellInfoRDD = cellRDD.map(cell -> {
-            int i = cell._1()._1();
-            int j = cell._1()._2();
-            int N3 = calculateN3(cell._1(), cellList);
-            int N7 = calculateN7(cell._1(), cellList);
+        JavaRDD<Tuple2<Tuple2<Tuple2<Long, Long>, Long>, Tuple2<Long, Long>>> cellInfoRDD = cellRDD.map(cell -> {
+            long i = cell._1()._1();
+            long j = cell._1()._2();
+            long N3 = calculateN3(cell._1(), cellList);
+            long N7 = calculateN7(cell._1(), cellList);
             return new Tuple2<>(new Tuple2<>(cell._1(), cell._2()), new Tuple2<>(N3, N7));
         });
 
        // Compute the number of sure outliers
         long sureOutliers = cellInfoRDD.filter(cell -> {
-            int N7 = cell._2()._2();
+            long N7 = cell._2()._2();
             return N7 <= M;
         }).count();
 
         // Compute the number of uncertain outliers
         long uncertainPoints = cellInfoRDD.filter(cell -> {
-            int N3 = cell._2()._1();
-            int N7 = cell._2()._2();
+            long N3 = cell._2()._1();
+            long N7 = cell._2()._2();
             return (N3 <= M && N7 > M);
         }).count();
 
-        List<Tuple2<Tuple2<Integer, Integer>, Integer>> sortedCells = cellRDD.mapToPair(pair -> new Tuple2<>(pair._2, pair._1 ))
+        List<Tuple2<Tuple2<Long, Long>, Long>> sortedCells = cellRDD.mapToPair(pair -> new Tuple2<>(pair._2, pair._1 ))
                 .sortByKey()
                 .mapToPair(pair -> new Tuple2<>(pair._2, pair._1))
                 .take(K);
@@ -111,13 +113,13 @@ public class G018HW1{
 
 
     // Computes the number of elements in the area of size 3x3 around a cell
-    public static int calculateN3(Tuple2<Integer, Integer> cell, Iterable<Tuple2<Tuple2<Integer, Integer>, Integer>> cellRDD) {
-        int i = cell._1();
-        int j = cell._2();
-        int count = 0;
-        for (Tuple2<Tuple2<Integer, Integer>, Integer> neighbor : cellRDD) {
-            int x = neighbor._1()._1();
-            int y = neighbor._1()._2();
+    public static long calculateN3(Tuple2<Long, Long> cell, Iterable<Tuple2<Tuple2<Long, Long>, Long>> cellRDD) {
+        long i = cell._1();
+        long j = cell._2();
+        long count = 0;
+        for (Tuple2<Tuple2<Long, Long>, Long> neighbor : cellRDD) {
+            long x = neighbor._1()._1();
+            long y = neighbor._1()._2();
             if ((Math.abs(x - i) <= 1) && (Math.abs(y - j) <= 1)) {
                 count++;
             }
@@ -126,13 +128,13 @@ public class G018HW1{
     }
 
     // Computes the number of elements in the area of size 7x7 around a cell 
-    public static int calculateN7(Tuple2<Integer, Integer> cell, Iterable<Tuple2<Tuple2<Integer, Integer>, Integer>> cellRDD) {
-        int i = cell._1();
-        int j = cell._2();
-        int count = 0;
-        for (Tuple2<Tuple2<Integer, Integer>, Integer> neighbor : cellRDD) {
-            int x = neighbor._1()._1();
-            int y = neighbor._1()._2();
+    public static long calculateN7(Tuple2<Long, Long> cell, Iterable<Tuple2<Tuple2<Long, Long>, Long>> cellRDD) {
+        long i = cell._1();
+        long j = cell._2();
+        long count = 0;
+        for (Tuple2<Tuple2<Long, Long>, Long> neighbor : cellRDD) {
+            long x = neighbor._1()._1();
+            long y = neighbor._1()._2();
             if ((Math.abs(x - i) <= 3) && (Math.abs(y - j) <= 3)) {
                 count++;
             }
