@@ -118,7 +118,7 @@ public class G018HW1{
         for (Tuple2<Tuple2<Integer, Integer>, Integer> neighbor : cellRDD) {
             int x = neighbor._1()._1();
             int y = neighbor._1()._2();
-            if ((Math.abs(x - i) <= 1) && (Math.abs(y - j) <= 1) && (x != i || y != j)) {
+            if ((Math.abs(x - i) <= 1) && (Math.abs(y - j) <= 1)) {
                 count++;
             }
         }
@@ -133,8 +133,7 @@ public class G018HW1{
         for (Tuple2<Tuple2<Integer, Integer>, Integer> neighbor : cellRDD) {
             int x = neighbor._1()._1();
             int y = neighbor._1()._2();
-            // TODO I'm quite sure here we should NOT use distance 1
-            if ((Math.abs(x - i) <= 1) && (Math.abs(y - j) <= 1) && (x != i || y != j)) {
+            if ((Math.abs(x - i) <= 3) && (Math.abs(y - j) <= 3)) {
                 count++;
             }
         }
