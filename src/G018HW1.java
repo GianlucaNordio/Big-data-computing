@@ -25,9 +25,11 @@ public class G018HW1{
         // Create a map storing (point, number of points which have distance <= D from the point as key)
         Map<Point2D, Long> counts = new HashMap<>();
 
+
         for(int i = 0; i < listOfPoints.size(); i++) {
-            for (int j = 0; j < listOfPoints.size(); j++) {
-                Point2D x = listOfPoints.get(i);
+            Point2D x = listOfPoints.get(i);
+            counts.put(x, 1L + counts.getOrDefault(x, 0L));
+            for (int j = i + 1; j < listOfPoints.size(); j++) {
                 Point2D y = listOfPoints.get(j);
                 if (x.distance(y) <= D) {
                     counts.put(x, 1L + counts.getOrDefault(x, 0L));
@@ -66,7 +68,7 @@ public class G018HW1{
             int i = (int) Math.floor(point.getX() / (D / (2 * Math.sqrt(2))));
             int j = (int) Math.floor(point.getY() / (D / (2 * Math.sqrt(2))));
             return new Tuple2<>(new Tuple2<>(i, j), 1);
-        }).reduceByKey(Integer::sum); //TODO understand if here we need to cache the RDD (probably yes)
+        }).reduceByKey(Integer::sum).cache();
 
         // Computation of |N3(C)| and |N7(C)|
         List<Tuple2<Tuple2<Integer, Integer>, Integer>> cellList = cellRDD.collect();
@@ -184,10 +186,11 @@ public class G018HW1{
             // Collect points into a list
             List<Point2D> listOfPoints = inputPoints.collect();
 
-            // Execute ExactOutliers
+            // Execute ExactOutlier
             long startTimeExact = System.currentTimeMillis();
             ExactOutliers(listOfPoints, D, M, K);
             long endTimeExact = System.currentTimeMillis();
+            
             System.out.println("ExactOutliers running time: " + (endTimeExact - startTimeExact) + " milliseconds");
         }
 
