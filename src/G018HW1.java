@@ -22,6 +22,8 @@ public class G018HW1{
     static void ExactOutliers(List<Point2D> listOfPoints, double D, int M, int K) {
         System.out.println("Executing ExactOutliers with parameters: D=" + D + ", M=" + M + ", K=" + K);
 
+        long startTimeExact = System.currentTimeMillis();
+
         // Create a map storing (point, number of points which have distance <= D from the point as key)
         Map<Point2D, Long> counts = new HashMap<>();
 
@@ -45,19 +47,20 @@ public class G018HW1{
                 numberOfOutliers++;
         }
 
+        long endTimeExact = System.currentTimeMillis();
+
         System.out.println("The number of sure (D,M)-outliers is " + numberOfOutliers);
 
         // The first K elements (or the available points) are shown sorted by number of elements at distance <= D
         List<Map.Entry<Point2D, Long>> orderedOutliers = new ArrayList<>(counts.entrySet());
         orderedOutliers.sort(Map.Entry.comparingByValue());
 
-        //TODO having this loop that prints inside here means it's calculated in the time for execution
-        //making the result no-sense (we may for example return an ArrayList and show the result outside or move
-        //the computation of the time inside the method
         for(int i = 0; i < min(K, numberOfOutliers); i++) {
             Point2D point = orderedOutliers.get(i).getKey();
             System.out.println("(" + point.getX() + "," + point.getY() +")");
         }
+
+        System.out.println("ExactOutliers running time: " + (endTimeExact - startTimeExact) + " milliseconds");
     }
     public static void MRApproxOutliers(JavaRDD<Point2D> pointsRDD, double D, int M, int K) {
         System.out.println("Executing MRApproxOutliers with parameters: D=" + D + ", M=" + M + ", K=" + K);
@@ -187,11 +190,7 @@ public class G018HW1{
             List<Point2D> listOfPoints = inputPoints.collect();
 
             // Execute ExactOutlier
-            long startTimeExact = System.currentTimeMillis();
             ExactOutliers(listOfPoints, D, M, K);
-            long endTimeExact = System.currentTimeMillis();
-            
-            System.out.println("ExactOutliers running time: " + (endTimeExact - startTimeExact) + " milliseconds");
         }
 
         // Execute MRApproxOutliers
