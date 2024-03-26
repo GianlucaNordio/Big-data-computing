@@ -89,14 +89,15 @@ public class G018HW1{
         long sureOutliers = cellInfoRDD.filter(cell -> {
             long N7 = cell._2()._2();
             return N7 <= M;
-        }).count();
+        }).map(cell -> cell._1()._2()).reduce(Long::sum);
+
 
         // Compute the number of uncertain outliers
         long uncertainPoints = cellInfoRDD.filter(cell -> {
             long N3 = cell._2()._1();
             long N7 = cell._2()._2();
             return (N3 <= M && N7 > M);
-        }).count();
+        }).map(cell -> cell._1()._2()).reduce(Long::sum);
 
         List<Tuple2<Tuple2<Long, Long>, Long>> sortedCells = cellRDD.mapToPair(pair -> new Tuple2<>(pair._2, pair._1 ))
                 .sortByKey()
