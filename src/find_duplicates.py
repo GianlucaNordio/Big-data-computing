@@ -1,11 +1,13 @@
-import pandas as pd
+file_path = "../input/uber-10k.csv"
+points = []
+with open(file_path, 'r') as file:
+    for line in file:
+        # Splitting line by comma to get x and y coordinates
+        coordinates = line.strip().split(',')
+        if len(coordinates) == 2:
+            x = float(coordinates[0])
+            y = float(coordinates[1])
+            points.append((x,y))
 
-# Load the data from the CSV file
-df = pd.read_csv('../input/uber-10k.csv')
-
-# Find duplicate rows
-print(df)
-duplicates = df[df.duplicated()]
-
-print("Duplicate Rows:")
-print(duplicates)
+print("Number of points", len(points))
+print("Number of unique points", len(set(points)))
