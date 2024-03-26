@@ -77,10 +77,9 @@ public class G018HW1{
 
         // Computation of |N3(C)| and |N7(C)|
         List<Tuple2<Tuple2<Long, Long>, Long>> cellList = cellRDD.collect();
+
         //TODO check if here we should use a JavaPairRDD instead of a JavaRDD (also change the method map)
         JavaRDD<Tuple2<Tuple2<Tuple2<Long, Long>, Long>, Tuple2<Long, Long>>> cellInfoRDD = cellRDD.map(cell -> {
-            long i = cell._1()._1();
-            long j = cell._1()._2();
             long N3 = calculateN3(cell._1(), cellList);
             long N7 = calculateN7(cell._1(), cellList);
             return new Tuple2<>(new Tuple2<>(cell._1(), cell._2()), new Tuple2<>(N3, N7));
@@ -120,8 +119,9 @@ public class G018HW1{
         for (Tuple2<Tuple2<Long, Long>, Long> neighbor : cellRDD) {
             long x = neighbor._1()._1();
             long y = neighbor._1()._2();
+            long size = neighbor._2();
             if ((Math.abs(x - i) <= 1) && (Math.abs(y - j) <= 1)) {
-                count++;
+                count += size;
             }
         }
         return count;
@@ -135,8 +135,9 @@ public class G018HW1{
         for (Tuple2<Tuple2<Long, Long>, Long> neighbor : cellRDD) {
             long x = neighbor._1()._1();
             long y = neighbor._1()._2();
+            long size = neighbor._2();
             if ((Math.abs(x - i) <= 3) && (Math.abs(y - j) <= 3)) {
-                count++;
+                count += size;
             }
         }
         return count;
