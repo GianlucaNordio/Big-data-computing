@@ -69,6 +69,7 @@ public class G018HW1{
 
         // Input RDD: points
         // Output RDD: (i,j) is the key and number of points in that square is the value
+//TODO probably wrong, should use mapPartions
         JavaPairRDD<Tuple2<Long, Long>, Long> cellRDD = pointsRDD.mapToPair(point -> {
             long i = (long) Math.floor(point.getX() / (D / (2 * Math.sqrt(2))));
             long j = (long) Math.floor(point.getY() / (D / (2 * Math.sqrt(2))));
