@@ -131,12 +131,8 @@ public class G018HW1{
 
     public static void MRApproxOutliers(JavaRDD<Point2D> pointsRDD, double D, int M, int K) {
         // Input RDD: points
-<<<<<<< HEAD
         // Output RDD: cell with coordinates (i,j) is the key and number of points in that cell is the value
-=======
-        // Output RDD: (i,j) is the key and number of points in that square is the value
-//TODO probably wrong, should use mapPartions
->>>>>>> 614790630d6a308049ecb906efad285b2869b535
+        // TODO probably wrong, should use mapPartions
         JavaPairRDD<Tuple2<Long, Long>, Long> cellRDD = pointsRDD.mapToPair(point -> {
             long i = (long) Math.floor(point.getX() / (D / (2 * Math.sqrt(2))));
             long j = (long) Math.floor(point.getY() / (D / (2 * Math.sqrt(2))));
