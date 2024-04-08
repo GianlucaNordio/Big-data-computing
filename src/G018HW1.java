@@ -20,9 +20,9 @@ public class G018HW1{
         - number of outliers to show (if enough points are available)
     */
     public static class PointCounter implements Comparable<PointCounter>{
-        private final double x, y;
+        private final float x, y;
         private int numberOfNeighbours;
-        public PointCounter(double x, double y) {
+        public PointCounter(float x, float y) {
             this.x = x;
             this.y = y;
             numberOfNeighbours = 1;
@@ -33,15 +33,15 @@ public class G018HW1{
         }
 
         @Override
-        public int compareTo(@NotNull G018HW1.PointCounter point) {
+        public int compareTo(@NotNull PointCounter point) {
             return Integer.compare(numberOfNeighbours, point.numberOfNeighbours);
         }
 
-        public double getX() {
+        public float getX() {
             return x;
         }
 
-        public double getY() {
+        public float getY() {
             return y;
         }
 
@@ -49,63 +49,29 @@ public class G018HW1{
             return numberOfNeighbours;
         }
 
+        public float squareDistance(@NotNull PointCounter p) {
+            return (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y);
+        }
         @Override
         public String toString() {
             return "Point: (" + x + "," + y + ")";
         }
     }
-    static void ExactOutliers(List<Point2D> listOfPoints, double D, int M, int K) {
-        // Create a map storing (point, number of points which have distance <= D from the point as key)
-        long[] counts = new long[listOfPoints.size()];
-
-        for(int i = 0; i < listOfPoints.size(); i++) {
-            counts[i] += 1;
-            for (int j = i + 1; j < listOfPoints.size(); j++) {
-                Point2D x = listOfPoints.get(i);
-                Point2D y = listOfPoints.get(j);
-                if (x.distance(y) <= D) {
-                    counts[i] += 1;
-                    counts[j] += 1;
-                }
-            }
-        }
-
-        // Compute number of outliers
-        long numberOfOutliers = 0L;
-        for(long l : counts){
-            if(l <= M)
-                numberOfOutliers++;
-        }
-
-        System.out.println("Number of Outliers = " + numberOfOutliers);
-
-        // The first K elements (or the available points) are shown sorted by number of elements at distance <= D
-        List<Tuple2<Integer,Long>> points = new ArrayList<>();
-        for(int i = 0; i < listOfPoints.size(); i++) {
-            points.add(new Tuple2<>(i, counts[i]));
-        }
-        points.sort(Comparator.comparing(Tuple2::_2));
-
-        for(int i = 0; i < min(K, numberOfOutliers); i++) {
-            int index = points.get(i)._1();
-            System.out.println(listOfPoints.get(index));
-        }
-    }
-
-    static void ExactOutliers2(List<Point2D> listOfPoints, double D, int M, int K) {
-        // Create a map storing (point, number of points which have distance <= D from the point as key)
+q
+    static void ExactOutliers(List<Tuple2<Float,Float>> listOfPoints, float D, int M, int K) {
+        // Create a PointCounter array to track the count of points within distance D from each point.
         PointCounter[] points = new PointCounter[listOfPoints.size()];
 
         for (int i = 0; i < listOfPoints.size(); i++) {
-            Point2D p = listOfPoints.get(i);
-            points[i] = new PointCounter(p.getX(), p.getY());
+            Tuple2<Float,Float> p = listOfPoints.get(i);
+            points[i] = new PointCounter(p._1(), p._2());
         }
 
-        for(int i = 0; i < listOfPoints.size(); i++) {
-            for (int j = i + 1; j < listOfPoints.size(); j++) {
-                Point2D x = listOfPoints.get(i);
-                Point2D y = listOfPoints.get(j);
-                if (x.distance(y) <= D) {
+        for(int i = 0; i < points.length; i++) {
+            for (int j = i + 1; j < points.length; j++) {
+                PointCounter x = points[i];
+                PointCounter y = points[j];
+                if (x.squareDistance(y) <= D * D) {
                     points[i].addNeighbour();
                     points[j].addNeighbour();
                 }
@@ -129,13 +95,13 @@ public class G018HW1{
         }
     }
 
-    public static void MRApproxOutliers(JavaRDD<Point2D> pointsRDD, double D, int M, int K) {
+    public static void MRApproxOutliers(JavaPairRDD<Float,Float> pointsRDD, Float D, int M, int K) {
         // Input RDD: points
         // Output RDD: cell with coordinates (i,j) is the key and number of points in that cell is the value
-        // TODO probably wrong, should use mapPartions
         JavaPairRDD<Tuple2<Long, Long>, Long> cellRDD = pointsRDD.mapToPair(point -> {
-            long i = (long) Math.floor(point.getX() / (D / (2 * Math.sqrt(2))));
-            long j = (long) Math.floor(point.getY() / (D / (2 * Math.sqrt(2))));
+            double cellSide = D / (2 * Math.sqrt(2));
+            long i = (long) Math.floor(point._1() / cellSide);
+            long j = (long) Math.floor(point._2() / cellSide);
             return new Tuple2<>(new Tuple2<>(i, j), 1L);
         }).reduceByKey(Long::sum).cache();
 
@@ -214,7 +180,7 @@ public class G018HW1{
 
         // Retrieve command-line arguments
         String inputFilePath = args[0];
-        double D = Double.parseDouble(args[1]);
+        float D = Float.parseFloat(args[1]);
         int M = Integer.parseInt(args[2]);
         int K = Integer.parseInt(args[3]);
         int L = Integer.parseInt(args[4]);
@@ -231,11 +197,11 @@ public class G018HW1{
         JavaRDD<String> rawData = sc.textFile(inputFilePath);
 
         // Transform into RDD of points (pairs of integers)
-        JavaRDD<Point2D> inputPoints = rawData.map(line -> {
+        JavaPairRDD<Float,Float> inputPoints = rawData.mapToPair(line -> {
             String[] parts = line.split(",");
-            double x = Double.parseDouble(parts[0]);
-            double y = Double.parseDouble(parts[1]);
-            return new Point2D.Double(x,y);
+            float x = Float.parseFloat(parts[0]);
+            float y = Float.parseFloat(parts[1]);
+            return new Tuple2<>(x, y);
         });
 
         // Repartition RDD into L partitions
@@ -247,11 +213,11 @@ public class G018HW1{
 
         if (totalPoints <= 200000) {
             // Collect points into a list
-            List<Point2D> listOfPoints = inputPoints.collect();
+            List<Tuple2<Float,Float>> listOfPoints = inputPoints.collect();
 
             // Execute ExactOutlier
             long startTimeExact = System.currentTimeMillis();
-            ExactOutliers2(listOfPoints, D, M, K);
+            ExactOutliers(listOfPoints, D, M, K);
             long endTimeExact = System.currentTimeMillis();
             System.out.println("Running time of ExactOutliers = " + (endTimeExact - startTimeExact) + " ms");
         }
