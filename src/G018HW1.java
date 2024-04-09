@@ -12,13 +12,17 @@ import java.util.List;
 import static com.google.common.primitives.Longs.min;
 
 public class G018HW1{
+
+    // If there are fewer points than this threshold, then also the exactOutliers method is executed
+    public static final int THRESHOLD_EXACT_OUTLIERS = 200000;
+
     /*
-        Computes the number of exact outliers based on
-        - list of points in input
-        - distance defining when to count a point as close
-        - number of points close in order to not be an outlier
-        - number of outliers to show (if enough points are available)
-    */
+                Computes the number of exact outliers based on
+                - list of points in input
+                - distance defining when to count a point as close
+                - number of points close in order to not be an outlier
+                - number of outliers to show (if enough points are available)
+            */
     public static class PointCounter implements Comparable<PointCounter>{
         private final float x, y;
         private int numberOfNeighbours;
@@ -211,7 +215,7 @@ public class G018HW1{
         long totalPoints = inputPoints.count();
         System.out.println("Number of points = " + totalPoints);
 
-        if (totalPoints <= 200000) {
+        if (totalPoints <= THRESHOLD_EXACT_OUTLIERS) {
             // Collect points into a list
             List<Tuple2<Float,Float>> listOfPoints = inputPoints.collect();
 
