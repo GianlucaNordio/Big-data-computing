@@ -57,7 +57,7 @@ public class G018HW1{
             return "Point: (" + x + "," + y + ")";
         }
     }
-q
+
     static void ExactOutliers(List<Tuple2<Float,Float>> listOfPoints, float D, int M, int K) {
         // Create a PointCounter array to track the count of points within distance D from each point.
         PointCounter[] points = new PointCounter[listOfPoints.size()];
@@ -95,7 +95,7 @@ q
         }
     }
 
-    public static void MRApproxOutliers(JavaPairRDD<Float,Float> pointsRDD, Float D, int M, int K) {
+    public static void MRApproxOutliers(JavaRDD<Tuple2<Float,Float>> pointsRDD, Float D, int M, int K) {
         // Input RDD: points
         // Output RDD: cell with coordinates (i,j) is the key and number of points in that cell is the value
         JavaPairRDD<Tuple2<Long, Long>, Long> cellRDD = pointsRDD.mapToPair(point -> {
@@ -197,7 +197,7 @@ q
         JavaRDD<String> rawData = sc.textFile(inputFilePath);
 
         // Transform into RDD of points (pairs of integers)
-        JavaPairRDD<Float,Float> inputPoints = rawData.mapToPair(line -> {
+        JavaRDD<Tuple2<Float,Float>> inputPoints = rawData.map(line -> {
             String[] parts = line.split(",");
             float x = Float.parseFloat(parts[0]);
             float y = Float.parseFloat(parts[1]);
