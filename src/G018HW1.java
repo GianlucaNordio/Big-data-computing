@@ -64,16 +64,18 @@ public class G018HW1{
         // Create a PointCounter array to track the count of points within distance D from each point.
         PointCounter[] points = new PointCounter[listOfPoints.size()];
 
+        // Assign a point to each element of the array
         for (int i = 0; i < listOfPoints.size(); i++) {
             Tuple2<Float,Float> p = listOfPoints.get(i);
             points[i] = new PointCounter(p._1(), p._2());
         }
 
+        // Fill the array and avoid comparing points multiple times
         for(int i = 0; i < points.length; i++) {
             for (int j = i + 1; j < points.length; j++) {
                 PointCounter x = points[i];
                 PointCounter y = points[j];
-                if (x.squareDistance(y) <= D * D) {
+                if (x.squareDistance(y) <= D * D) { // Square distance used to make code more efficient
                     points[i].addNeighbour();
                     points[j].addNeighbour();
                 }
@@ -89,17 +91,17 @@ public class G018HW1{
 
         System.out.println("Number of Outliers = " + numberOfOutliers);
 
-        // The first K elements (or the available points) are shown sorted by number of elements at distance <= D
+        // The first K elements (or the available points) are shown sorted by number of neighbours
         Arrays.sort(points);
-
         for(int i = 0; i < min(K, numberOfOutliers); i++) {
             System.out.println(points[i]);
         }
     }
 
     public static void MRApproxOutliers(JavaRDD<Tuple2<Float,Float>> pointsRDD, Float D, int M, int K) {
+
         // Input RDD: points
-        // Output RDD: cell with coordinates (i,j) is the key and number of points in that cell is the value
+        // Output RDD: cell with coordinates (i,j) as key and number of points in that cell as value
         JavaPairRDD<Tuple2<Long, Long>, Long> cellRDD = pointsRDD.mapToPair(point -> {
             double cellSide = D / (2 * Math.sqrt(2));
             long i = (long) Math.floor(point._1() / cellSide);
@@ -107,17 +109,21 @@ public class G018HW1{
             return new Tuple2<>(new Tuple2<>(i, j), 1L);
         }).reduceByKey(Long::sum).cache();
 
-        // Computation of |N3(C)| and |N7(C)|
+
         List<Tuple2<Tuple2<Long, Long>, Long>> cellList = cellRDD.collect();
         Map<Tuple2<Long,Long>, Long> cellMap = new HashMap<>();
         for (Tuple2<Tuple2<Long, Long>, Long> cell : cellList) {
             cellMap.put(cell._1(), cell._2());
         }
 
+        //TODO change based on Lorenzo's Answer
+        // Input RDD: cell coordinates as a key with number of points inside as a value
+        // Output RDD: pair (cell coordinates, elements in the cell) as a key, N3 and N7 as values
         JavaPairRDD<Tuple2<Tuple2<Long, Long>, Long>, Tuple2<Long, Long>> cellInfoRDD = cellRDD.mapToPair(cell -> {
             long N3 = calculateN3(cell._1(), cellMap);
             long N7 = calculateN7(cell._1(), cellMap);
             return new Tuple2<>(new Tuple2<>(cell._1(), cell._2()), new Tuple2<>(N3, N7));
+            //TODO check if cell._2 is needed
         });
 
        // Compute the number of sure outliers
