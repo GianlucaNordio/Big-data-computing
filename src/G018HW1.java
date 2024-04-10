@@ -4,8 +4,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.jetbrains.annotations.NotNull;
 import scala.Tuple2;
-
-import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.List;
 
