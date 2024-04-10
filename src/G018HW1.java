@@ -116,14 +116,12 @@ public class G018HW1{
             cellMap.put(cell._1(), cell._2());
         }
 
-        //TODO change based on Lorenzo's Answer
         // Input RDD: cell coordinates as a key with number of points inside as a value
         // Output RDD: pair (cell coordinates, elements in the cell) as a key, N3 and N7 as values
         JavaPairRDD<Tuple2<Tuple2<Long, Long>, Long>, Tuple2<Long, Long>> cellInfoRDD = cellRDD.mapToPair(cell -> {
             long N3 = calculateN3(cell._1(), cellMap);
             long N7 = calculateN7(cell._1(), cellMap);
             return new Tuple2<>(new Tuple2<>(cell._1(), cell._2()), new Tuple2<>(N3, N7));
-            //TODO check if cell._2 is needed
         });
 
        // Compute the number of sure outliers
