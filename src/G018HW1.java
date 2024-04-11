@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Class G018HW1 implements algorithms for outlier detection using Apache Spark.
  * Group 18
- * Authors: Lorenzo Cazzador, Giovanni Cinel, Nordio Gianluca
+ * Authors: Lorenzo Cazzador, Giovanni Cinel, Gianluca Nordio
  */
 public class G018HW1{
 
