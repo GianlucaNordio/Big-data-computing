@@ -118,25 +118,25 @@ public class G018HW1{
 
         // Input RDD: cell coordinates as a key with number of points inside as a value
         // Output RDD: pair (cell coordinates, elements in the cell) as a key, N3 and N7 as values
-        JavaPairRDD<Tuple2<Tuple2<Long, Long>, Long>, Tuple2<Long, Long>> cellInfoRDD = cellRDD.mapToPair(cell -> {
+        JavaPairRDD<Tuple2<Long, Long>, Tuple2<Long, Tuple2<Long, Long>>> cellInfoRDD = cellRDD.mapToPair(cell -> {
             long N3 = calculateN3(cell._1(), cellMap);
             long N7 = calculateN7(cell._1(), cellMap);
-            return new Tuple2<>(new Tuple2<>(cell._1(), cell._2()), new Tuple2<>(N3, N7));
+            return new Tuple2<>(cell._1(), new Tuple2<>(cell._2(), new Tuple2<>(N3, N7)));
         });
 
        // Compute the number of sure outliers
         long sureOutliers = cellInfoRDD.filter(cell -> {
-            long N7 = cell._2()._2();
+            long N7 = cell._2()._2()._2();
             return N7 <= M;
-        }).map(cell -> cell._1()._2()).reduce(Long::sum);
+        }).map(cell -> cell._2()._1()).reduce(Long::sum);
 
 
         // Compute the number of uncertain outliers
         long uncertainPoints = cellInfoRDD.filter(cell -> {
-            long N3 = cell._2()._1();
-            long N7 = cell._2()._2();
+            long N3 = cell._2()._2()._1();
+            long N7 = cell._2()._2()._2();
             return (N3 <= M && N7 > M);
-        }).map(cell -> cell._1()._2()).reduce(Long::sum);
+        }).map(cell -> cell._2()._1()).reduce(Long::sum);
 
         List<Tuple2<Long, Tuple2<Long, Long>>> sortedCells = cellRDD.mapToPair(pair -> new Tuple2<>(pair._2, pair._1 ))
                 .sortByKey()
