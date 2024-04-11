@@ -7,29 +7,39 @@ import scala.Tuple2;
 import java.util.*;
 import java.util.List;
 
-import static com.google.common.primitives.Longs.min;
-
+/**
+ * Class G018HW1 implements algorithms for outlier detection using Apache Spark.
+ * Group 18
+ * Authors: Lorenzo Cazzador, Giovanni Cinel, Nordio Gianluca
+ */
 public class G018HW1{
 
-    // If there are fewer points than this threshold, then also the exactOutliers method is executed
+    /**
+     * If there are fewer points than this threshold, then the exactOutliers method is executed.
+     */
     public static final int THRESHOLD_EXACT_OUTLIERS = 200000;
 
-    /*
-                Computes the number of exact outliers based on
-                - list of points in input
-                - distance defining when to count a point as close
-                - number of points close in order to not be an outlier
-                - number of outliers to show (if enough points are available)
-            */
+    /**
+     * Represents a point along with the count of its neighbors.
+     */
     public static class PointCounter implements Comparable<PointCounter>{
         private final float x, y;
         private int numberOfNeighbours;
+
+        /**
+         * Initializes a PointCounter object with the given coordinates.
+         * @param x The x-coordinate of the point.
+         * @param y The y-coordinate of the point.
+         */
         public PointCounter(float x, float y) {
             this.x = x;
             this.y = y;
             numberOfNeighbours = 1;
         }
 
+        /**
+         * Increments the count of neighbors for this point.
+         */
         public void addNeighbour() {
             numberOfNeighbours++;
         }
@@ -39,18 +49,19 @@ public class G018HW1{
             return Integer.compare(numberOfNeighbours, point.numberOfNeighbours);
         }
 
-        public float getX() {
-            return x;
-        }
-
-        public float getY() {
-            return y;
-        }
-
+        /**
+         * Retrieves the number of neighbors of the point.
+         * @return The number of neighbors of the point.
+         */
         public int getNumberOfNeighbours() {
             return numberOfNeighbours;
         }
 
+        /**
+         * Calculates the square distance between this point and another point.
+         * @param p The other point.
+         * @return The square distance between this point and the other point.
+         */
         public float squareDistance(@NotNull PointCounter p) {
             return (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y);
         }
@@ -60,8 +71,15 @@ public class G018HW1{
         }
     }
 
+    /**
+     * Computes the number of exact outliers based on specified parameters.
+     * @param listOfPoints List of points in input.
+     * @param D Distance defining when to count a point as close.
+     * @param M Number of points close in order to not be an outlier.
+     * @param K Number of outliers to show (if enough points are available).
+     */
     static void ExactOutliers(List<Tuple2<Float,Float>> listOfPoints, float D, int M, int K) {
-        // Create a PointCounter array to track the count of points within distance D from each point.
+        // Create a PointCounter array to track the count of points within distance D from each point
         PointCounter[] points = new PointCounter[listOfPoints.size()];
 
         // Assign a point to each element of the array
@@ -93,11 +111,18 @@ public class G018HW1{
 
         // The first K elements (or the available points) are shown sorted by number of neighbours
         Arrays.sort(points);
-        for(int i = 0; i < min(K, numberOfOutliers); i++) {
+        for(int i = 0; i < Math.min(K, numberOfOutliers); i++) {
             System.out.println(points[i]);
         }
     }
 
+    /**
+     * Computes outliers using MapReduce approach based on specified parameters.
+     * @param pointsRDD RDD of points.
+     * @param D Distance defining when to count a point as close.
+     * @param M Number of points close in order to not be an outlier.
+     * @param K Number of cells to print.
+     */
     public static void MRApproxOutliers(JavaRDD<Tuple2<Float,Float>> pointsRDD, Float D, int M, int K) {
 
         // Input RDD: points
@@ -116,8 +141,8 @@ public class G018HW1{
             cellMap.put(cell._1(), cell._2());
         }
 
-        // Input RDD: cell coordinates as a key with number of points inside as a value
-        // Output RDD: pair (cell coordinates, elements in the cell) as a key, N3 and N7 as values
+        // Input RDD: cell coordinates as a key with number of points inside as value
+        // Output RDD: cell coordinates as a key with pair (number of points in the cell, (N3, N7)) as value
         JavaPairRDD<Tuple2<Long, Long>, Tuple2<Long, Tuple2<Long, Long>>> cellInfoRDD = cellRDD.mapToPair(cell -> {
             long N3 = calculateN3(cell._1(), cellMap);
             long N7 = calculateN7(cell._1(), cellMap);
@@ -149,7 +174,12 @@ public class G018HW1{
     }
 
 
-    // Computes the number of elements in the area of size 3x3 around a cell
+    /**
+     * Computes the number of elements in the area of size 3x3 around a cell.
+     * @param cell The cell coordinates.
+     * @param cellRDD The map containing cell coordinates as key and number of points inside as value.
+     * @return The number of points in the 3x3 area around the cell.
+     */
     public static long calculateN3(Tuple2<Long, Long> cell, Map<Tuple2<Long,Long>, Long> cellRDD) {
         long i = cell._1();
         long j = cell._2();
@@ -163,7 +193,12 @@ public class G018HW1{
         return count;
     }
 
-    // Computes the number of elements in the area of size 7x7 around a cell 
+    /**
+     * Computes the number of elements in the area of size 7x7 around a cell.
+     * @param cell The cell coordinates.
+     * @param cellRDD The map containing cell coordinates as key and number of points inside as value.
+     * @return The number of points in the 7x7 area around the cell.
+     */
     public static long calculateN7(Tuple2<Long, Long> cell, Map<Tuple2<Long,Long>, Long> cellRDD) {
         long i = cell._1();
         long j = cell._2();
@@ -177,7 +212,10 @@ public class G018HW1{
         return count;
     }
 
-
+    /**
+     * Main method for executing the outlier detection algorithms.
+     * @param args Command line arguments: inputFilePath, D, M, K, L.
+     */
     public static void main(String[] args) {
         if (args.length < 5) {
             System.err.println("Usage: PointProcessing <inputFilePath> <D> <M> <K> <L>");
