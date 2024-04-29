@@ -15,70 +15,12 @@ import java.util.List;
 public class G018HW2{
 
     /**
-     * If there are fewer points than this threshold, then the exactOutliers method is executed.
-     */
-    public static final int THRESHOLD_EXACT_OUTLIERS = 200000;
-
-    /**
-     * Represents a point along with the count of its neighbors.
-     */
-    public static class PointCounter implements Comparable<PointCounter>{
-        private final float x, y;
-        private int numberOfNeighbours;
-
-        /**
-         * Initializes a PointCounter object with the given coordinates.
-         * @param x The x-coordinate of the point.
-         * @param y The y-coordinate of the point.
-         */
-        public PointCounter(float x, float y) {
-            this.x = x;
-            this.y = y;
-            numberOfNeighbours = 1;
-        }
-
-        /**
-         * Increments the count of neighbors for this point.
-         */
-        public void addNeighbour() {
-            numberOfNeighbours++;
-        }
-
-        @Override
-        public int compareTo(@NotNull PointCounter point) {
-            return Integer.compare(numberOfNeighbours, point.numberOfNeighbours);
-        }
-
-        /**
-         * Retrieves the number of neighbors of the point.
-         * @return The number of neighbors of the point.
-         */
-        public int getNumberOfNeighbours() {
-            return numberOfNeighbours;
-        }
-
-        /**
-         * Calculates the square distance between this point and another point.
-         * @param p The other point.
-         * @return The square distance between this point and the other point.
-         */
-        public float squareDistance(@NotNull PointCounter p) {
-            return (p.x - x) * (p.x - x) + (p.y - y) * (p.y - y);
-        }
-        @Override
-        public String toString() {
-            return "Point: (" + x + "," + y + ")";
-        }
-    }
-
-    /**
      * Computes outliers using MapReduce approach based on specified parameters.
      * @param pointsRDD RDD of points.
      * @param D Distance defining when to count a point as close.
      * @param M Number of points close in order to not be an outlier.
-     * @param K Number of cells to print.
      */
-    public static void MRApproxOutliers(JavaRDD<Tuple2<Float,Float>> pointsRDD, Float D, int M, int K) {
+    public static void MRApproxOutliers(JavaRDD<Tuple2<Float,Float>> pointsRDD, Float D, int M) {
 
         // Input RDD: points
         // Output RDD: cell with coordinates (i,j) as key and number of points in that cell as value
@@ -125,7 +67,6 @@ public class G018HW2{
         // Print results
         System.out.println("Number of sure outliers = " + sureOutliers);
         System.out.println("Number of uncertain points = " + uncertainPoints);
-        sortedCells.forEach(cell -> System.out.println("Cell: " + cell._2() + "  Size = " + cell._1()));
     }
 
 
