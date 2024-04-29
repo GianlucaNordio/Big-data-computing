@@ -105,7 +105,7 @@ public class G018HW2{
     }
 
     // Define a Point class to represent points in 2D space
-    static class Point {
+    public static class Point {
         protected double x;
         protected double y;
 
@@ -122,35 +122,42 @@ public class G018HW2{
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    public static List<Point> farthestFirstTraversal(List<Point> points, int K) {
+    public static List<Point> SequentialFFT(List<Point> points, int K) {
         List<Point> centers = new ArrayList<>();
 
         // Choose the first point arbitrarily
-        Point firstPoint = points.get(0);
-        centers.add(firstPoint);
-        points.remove(firstPoint);
+        Point firstCenter = points.get(0);
+        centers.add(firstCenter);
+        points.remove(firstCenter);
+
+        double[] minDistanceFromCenter = new double[points.size()];
+        for (int i = 0; i < points.size(); i++) {
+            minDistanceFromCenter[i] = euclideanDistance(firstCenter, points.get(i));
+        }
 
         // Repeat until we have K centers
         while (centers.size() < K) {
             // Find the point farthest from the current set of centers
             Point farthestPoint = null;
             double maxDistance = Double.NEGATIVE_INFINITY;
-            for (Point point : points) {
-                double minDistance = Double.POSITIVE_INFINITY;
-                for (Point center : centers) {
-                    double distance = euclideanDistance(point, center);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                    }
-                }
-                if (minDistance > maxDistance) {
-                    maxDistance = minDistance;
-                    farthestPoint = point;
+
+            // Find the farthest point from the centers
+            for (int i = 0; i < points.size(); i++) {
+                if (minDistanceFromCenter[i] > maxDistance) {
+                    maxDistance = minDistanceFromCenter[i];
+                    farthestPoint = points.get(i);
                 }
             }
+
             // Add the farthest point to the centers
             centers.add(farthestPoint);
             points.remove(farthestPoint);
+
+            // For each point update the distance from the nearest center
+            for (int i = 0; i < points.size(); i++) {
+                double distFromLastCenter = euclideanDistance(farthestPoint, points.get(i));
+                minDistanceFromCenter[i] = Math.min(minDistanceFromCenter[i], distFromLastCenter);
+            }
         }
 
         return centers;
@@ -207,6 +214,18 @@ public class G018HW2{
         MRApproxOutliers(inputPoints, D, M);
         long endTimeMRApprox = System.currentTimeMillis();
         System.out.println("Running time of MRApproxOutliers = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
+
+        // Test SequentialFFT method
+        List<Point> points = new ArrayList<>();
+        for (Tuple2<Float, Float> t : inputPoints.collect()) {
+            points.add(new Point(t._1(), t._2()));
+        }
+        int k_fft = 5;
+        List<Point> centers = SequentialFFT(points, k_fft);
+        System.out.println("Centers returned by SequentialFFT");
+        for (Point p : centers) {
+            System.out.println("Punto (" + p.x + "," + p.y + ")");
+        }
 
         sc.close();
     }
