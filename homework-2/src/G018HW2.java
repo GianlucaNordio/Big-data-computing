@@ -8,11 +8,11 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Class G018HW1 implements algorithms for outlier detection using Apache Spark.
+ * Class G018HW2 implements algorithms for outlier detection using Apache Spark.
  * Group 18
  * Authors: Lorenzo Cazzador, Giovanni Cinel, Gianluca Nordio
  */
-public class G018HW1{
+public class G018HW2{
 
     /**
      * If there are fewer points than this threshold, then the exactOutliers method is executed.
@@ -68,51 +68,6 @@ public class G018HW1{
         @Override
         public String toString() {
             return "Point: (" + x + "," + y + ")";
-        }
-    }
-
-    /**
-     * Computes the number of exact outliers based on specified parameters.
-     * @param listOfPoints List of points in input.
-     * @param D Distance defining when to count a point as close.
-     * @param M Number of points close in order to not be an outlier.
-     * @param K Number of outliers to show (if enough points are available).
-     */
-    static void ExactOutliers(List<Tuple2<Float,Float>> listOfPoints, float D, int M, int K) {
-        // Create a PointCounter array to track the count of points within distance D from each point
-        PointCounter[] points = new PointCounter[listOfPoints.size()];
-
-        // Assign a point to each element of the array
-        for (int i = 0; i < listOfPoints.size(); i++) {
-            Tuple2<Float,Float> p = listOfPoints.get(i);
-            points[i] = new PointCounter(p._1(), p._2());
-        }
-
-        // Fill the array and avoid comparing points multiple times
-        for(int i = 0; i < points.length; i++) {
-            for (int j = i + 1; j < points.length; j++) {
-                PointCounter x = points[i];
-                PointCounter y = points[j];
-                if (x.squareDistance(y) <= D * D) { // Square distance used to make code more efficient
-                    points[i].addNeighbour();
-                    points[j].addNeighbour();
-                }
-            }
-        }
-
-        // Compute number of outliers
-        long numberOfOutliers = 0L;
-        for(PointCounter p : points){
-            if(p.getNumberOfNeighbours() <= M)
-                numberOfOutliers++;
-        }
-
-        System.out.println("Number of Outliers = " + numberOfOutliers);
-
-        // The first K elements (or the available points) are shown sorted by number of neighbours
-        Arrays.sort(points);
-        for(int i = 0; i < Math.min(K, numberOfOutliers); i++) {
-            System.out.println(points[i]);
         }
     }
 
