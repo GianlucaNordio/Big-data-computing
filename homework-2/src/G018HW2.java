@@ -2,7 +2,6 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.jetbrains.annotations.NotNull;
 import scala.Tuple2;
 import java.util.*;
 import java.util.List;
@@ -60,10 +59,6 @@ public class G018HW2{
             long N7 = cell._2()._2()._2();
             return (N3 <= M && N7 > M);
         }).map(cell -> cell._2()._1()).reduce(Long::sum);
-
-        List<Tuple2<Long, Tuple2<Long, Long>>> sortedCells = cellRDD.mapToPair(pair -> new Tuple2<>(pair._2, pair._1 ))
-                .sortByKey()
-                .take(K);
 
         // Print results
         System.out.println("Number of sure outliers = " + sureOutliers);
@@ -161,7 +156,11 @@ public class G018HW2{
         return centers;
     }
 
-    ublic static void main(String[] args) {
+    public static float MRFFT(JavaRDD<Tuple2<Float, Float>> inputPoints, int k) {
+        return 0;
+    }
+
+    public static void main(String[] args) {
         if (args.length < 4) {
             System.err.println("Usage: java Main <inputFilePath> <M> <K> <L>");
             System.exit(1);
