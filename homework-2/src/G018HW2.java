@@ -161,36 +161,33 @@ public class G018HW2{
         return centers;
     }
 
-    /**
-     * Main method for executing the outlier detection algorithms.
-     * @param args Command line arguments: inputFilePath, D, M, K, L.
-     */
-    public static void main(String[] args) {
-        if (args.length < 5) {
-            System.err.println("Usage: PointProcessing <inputFilePath> <D> <M> <K> <L>");
+    ublic static void main(String[] args) {
+        if (args.length < 4) {
+            System.err.println("Usage: java Main <inputFilePath> <M> <K> <L>");
             System.exit(1);
         }
 
-        // Retrieve command-line arguments
         String inputFilePath = args[0];
-        float D = Float.parseFloat(args[1]);
-        int M = Integer.parseInt(args[2]);
-        int K = Integer.parseInt(args[3]);
-        int L = Integer.parseInt(args[4]);
+        int M = Integer.parseInt(args[1]);
+        int K = Integer.parseInt(args[2]);
+        int L = Integer.parseInt(args[3]);
 
         // Create a Spark context
-        SparkConf conf = new SparkConf(true).setAppName("G018HW1");
+        SparkConf conf = new SparkConf(true).setAppName("G018HW2");
         JavaSparkContext sc = new JavaSparkContext(conf);
         sc.setLogLevel("WARN");
 
         // Print command-line arguments
-        System.out.println(inputFilePath + " D=" + D + " M=" + M + " K=" + K + " L=" + L);
+        System.out.println("Input File Path: " + inputFilePath);
+        System.out.println("M: " + M);
+        System.out.println("K: " + K);
+        System.out.println("L: " + L);
 
         // Read input points into an RDD of strings
         JavaRDD<String> rawData = sc.textFile(inputFilePath);
 
-        // Transform into RDD of points (pairs of integers)
-        JavaRDD<Tuple2<Float,Float>> inputPoints = rawData.map(line -> {
+        // Transform raw data into an RDD of points (pairs of floats)
+        JavaRDD<Tuple2<Float, Float>> inputPoints = rawData.map(line -> {
             String[] parts = line.split(",");
             float x = Float.parseFloat(parts[0]);
             float y = Float.parseFloat(parts[1]);
@@ -202,26 +199,16 @@ public class G018HW2{
 
         // Print total number of points
         long totalPoints = inputPoints.count();
-        System.out.println("Number of points = " + totalPoints);
+        System.out.println("Total number of points: " + totalPoints);
 
-        if (totalPoints <= THRESHOLD_EXACT_OUTLIERS) {
-            // Collect points into a list
-            List<Tuple2<Float,Float>> listOfPoints = inputPoints.collect();
+        // Execute MRFFT to get radius D
+        float D = MRFFT(inputPoints, K);
 
-            // Execute ExactOutlier
-            long startTimeExact = System.currentTimeMillis();
-            ExactOutliers(listOfPoints, D, M, K);
-            long endTimeExact = System.currentTimeMillis();
-            System.out.println("Running time of ExactOutliers = " + (endTimeExact - startTimeExact) + " ms");
-        }
-
-        // Execute MRApproxOutliers
         long startTimeMRApprox = System.currentTimeMillis();
-        MRApproxOutliers(inputPoints, D, M, K);
+        MRApproxOutliers(inputPoints, D, M);
         long endTimeMRApprox = System.currentTimeMillis();
         System.out.println("Running time of MRApproxOutliers = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
 
-        // Close Spark context
         sc.close();
     }
 }
