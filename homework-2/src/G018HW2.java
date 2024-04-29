@@ -108,6 +108,77 @@ public class G018HW2{
         return count;
     }
 
+    public class SequentialFFT {
+
+        public static List<Point> farthestFirstTraversal(List<Point> points, int K) {
+            List<Point> centers = new ArrayList<>();
+
+            // Choose the first point arbitrarily
+            Point firstPoint = points.get(0);
+            centers.add(firstPoint);
+            points.remove(firstPoint);
+
+            // Repeat until we have K centers
+            while (centers.size() < K) {
+                // Find the point farthest from the current set of centers
+                Point farthestPoint = null;
+                double maxDistance = Double.NEGATIVE_INFINITY;
+                for (Point point : points) {
+                    double minDistance = Double.POSITIVE_INFINITY;
+                    for (Point center : centers) {
+                        double distance = euclideanDistance(point, center);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                        }
+                    }
+                    if (minDistance > maxDistance) {
+                        maxDistance = minDistance;
+                        farthestPoint = point;
+                    }
+                }
+                // Add the farthest point to the centers
+                centers.add(farthestPoint);
+                points.remove(farthestPoint);
+            }
+
+            return centers;
+        }
+
+        // Calculate Euclidean distance between two points
+        private static double euclideanDistance(Point p1, Point p2) {
+            double dx = p1.x - p2.x;
+            double dy = p1.y - p2.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Define a Point class to represent points in 2D space
+        static class Point {
+            double x;
+            double y;
+
+            public Point(double x, double y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+
+        public static void main(String[] args) {
+            // Example usage
+            List<Point> points = new ArrayList<>();
+            points.add(new Point(1, 2));
+            points.add(new Point(3, 4));
+            points.add(new Point(5, 6));
+            points.add(new Point(7, 8));
+
+            int K = 2; // Number of centers
+            List<Point> centers = farthestFirstTraversal(points, K);
+            System.out.println("Centers:");
+            for (Point center : centers) {
+                System.out.println("(" + center.x + ", " + center.y + ")");
+            }
+        }
+    }
+
     /**
      * Main method for executing the outlier detection algorithms.
      * @param args Command line arguments: inputFilePath, D, M, K, L.
