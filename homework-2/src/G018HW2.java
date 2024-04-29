@@ -162,23 +162,6 @@ public class G018HW2{
             }
         }
 
-        public static void main(String[] args) {
-            // Example usage
-            List<Point> points = new ArrayList<>();
-            points.add(new Point(1, 2));
-            points.add(new Point(3, 4));
-            points.add(new Point(5, 6));
-            points.add(new Point(7, 8));
-
-            int K = 2; // Number of centers
-            List<Point> centers = farthestFirstTraversal(points, K);
-            System.out.println("Centers:");
-            for (Point center : centers) {
-                System.out.println("(" + center.x + ", " + center.y + ")");
-            }
-        }
-    }
-
     /**
      * Main method for executing the outlier detection algorithms.
      * @param args Command line arguments: inputFilePath, D, M, K, L.
