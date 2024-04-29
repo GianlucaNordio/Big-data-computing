@@ -108,59 +108,57 @@ public class G018HW2{
         return count;
     }
 
-    public class SequentialFFT {
+    // Define a Point class to represent points in 2D space
+    static class Point {
+        protected double x;
+        protected double y;
 
-        public static List<Point> farthestFirstTraversal(List<Point> points, int K) {
-            List<Point> centers = new ArrayList<>();
+        public Point(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
+    }
 
-            // Choose the first point arbitrarily
-            Point firstPoint = points.get(0);
-            centers.add(firstPoint);
-            points.remove(firstPoint);
+    // Calculate Euclidean distance between two points
+    private static double euclideanDistance(Point p1, Point p2) {
+        double dx = p1.x - p2.x;
+        double dy = p1.y - p2.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
 
-            // Repeat until we have K centers
-            while (centers.size() < K) {
-                // Find the point farthest from the current set of centers
-                Point farthestPoint = null;
-                double maxDistance = Double.NEGATIVE_INFINITY;
-                for (Point point : points) {
-                    double minDistance = Double.POSITIVE_INFINITY;
-                    for (Point center : centers) {
-                        double distance = euclideanDistance(point, center);
-                        if (distance < minDistance) {
-                            minDistance = distance;
-                        }
-                    }
-                    if (minDistance > maxDistance) {
-                        maxDistance = minDistance;
-                        farthestPoint = point;
+    public static List<Point> farthestFirstTraversal(List<Point> points, int K) {
+        List<Point> centers = new ArrayList<>();
+
+        // Choose the first point arbitrarily
+        Point firstPoint = points.get(0);
+        centers.add(firstPoint);
+        points.remove(firstPoint);
+
+        // Repeat until we have K centers
+        while (centers.size() < K) {
+            // Find the point farthest from the current set of centers
+            Point farthestPoint = null;
+            double maxDistance = Double.NEGATIVE_INFINITY;
+            for (Point point : points) {
+                double minDistance = Double.POSITIVE_INFINITY;
+                for (Point center : centers) {
+                    double distance = euclideanDistance(point, center);
+                    if (distance < minDistance) {
+                        minDistance = distance;
                     }
                 }
-                // Add the farthest point to the centers
-                centers.add(farthestPoint);
-                points.remove(farthestPoint);
+                if (minDistance > maxDistance) {
+                    maxDistance = minDistance;
+                    farthestPoint = point;
+                }
             }
-
-            return centers;
+            // Add the farthest point to the centers
+            centers.add(farthestPoint);
+            points.remove(farthestPoint);
         }
 
-        // Calculate Euclidean distance between two points
-        private static double euclideanDistance(Point p1, Point p2) {
-            double dx = p1.x - p2.x;
-            double dy = p1.y - p2.y;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-
-        // Define a Point class to represent points in 2D space
-        static class Point {
-            double x;
-            double y;
-
-            public Point(double x, double y) {
-                this.x = x;
-                this.y = y;
-            }
-        }
+        return centers;
+    }
 
     /**
      * Main method for executing the outlier detection algorithms.
