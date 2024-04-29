@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import scala.Tuple2;
 import java.util.*;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Class G018HW2 implements algorithms for outlier detection using Apache Spark.
