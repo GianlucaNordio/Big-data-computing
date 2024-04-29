@@ -157,7 +157,7 @@ public class G018HW2{
     }
 
     public static float MRFFT(JavaRDD<Tuple2<Float, Float>> inputPoints, int k) {
-        return 0;
+        return 1;
     }
 
     public static void main(String[] args) {
