@@ -2,6 +2,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import scala.Tuple2;
 import java.util.*;
 import java.util.List;
@@ -208,7 +209,7 @@ public class G018HW2{
         System.out.println("Total number of points: " + totalPoints);
 
         // Execute MRFFT to get radius D
-        float D = MRFFT(inputPoints, K);
+        float D = MRFFT(sc, inputPoints, K);
 
         long startTimeMRApprox = System.currentTimeMillis();
         MRApproxOutliers(inputPoints, D, M);
