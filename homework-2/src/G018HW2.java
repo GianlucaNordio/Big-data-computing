@@ -15,6 +15,7 @@ import java.util.ArrayList;
  */
 public class G018HW2{
 
+    static JavaSparkContext sc;
     /**
      * Computes outliers using MapReduce approach based on specified parameters.
      * @param pointsRDD RDD of points.
@@ -164,7 +165,7 @@ public class G018HW2{
         return centers;
     }
 
-    public static float MRFFT(JavaRDD<Tuple2<Float, Float>> inputPoints, int k) {
+    public static float MRFFT(JavaSparkContext sc, JavaRDD<Tuple2<Float, Float>> inputPoints, int k) {
         return 1;
     }
 
@@ -181,7 +182,7 @@ public class G018HW2{
 
         // Create a Spark context
         SparkConf conf = new SparkConf(true).setAppName("G018HW2");
-        JavaSparkContext sc = new JavaSparkContext(conf);
+        sc = new JavaSparkContext(conf);
         sc.setLogLevel("WARN");
 
         // Print command-line arguments
