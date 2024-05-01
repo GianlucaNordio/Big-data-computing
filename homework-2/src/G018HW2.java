@@ -1,7 +1,10 @@
+import org.apache.commons.collections.IteratorUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.codehaus.janino.Java;
 import scala.Tuple2;
 import java.util.*;
 import java.util.List;
@@ -116,30 +119,31 @@ public class G018HW2{
     }
 
     // Calculate Euclidean distance between two points
-    private static double euclideanDistance(Point p1, Point p2) {
-        double dx = p1.x - p2.x;
-        double dy = p1.y - p2.y;
-        return Math.sqrt(dx * dx + dy * dy);
+    private static float euclideanDistance(Tuple2<Float, Float> p1, Tuple2<Float, Float> p2) {
+        float dx = p1._1() - p2._1();
+        float dy = p1._2() - p2._2();
+        return (float) Math.sqrt(dx * dx + dy * dy);
     }
 
-    public static List<Point> SequentialFFT(List<Point> points, int K) {
-        List<Point> centers = new ArrayList<>();
+    public static List<Tuple2<Float, Float>> SequentialFFT(List<Tuple2<Float, Float>> points, int K) {
+        System.out.println(points.size());
+
+        List<Tuple2<Float, Float>> centers = new ArrayList<>();
 
         // Choose the first point arbitrarily
-        Point firstCenter = points.get(0);
+        Tuple2<Float, Float> firstCenter = points.get(0);
         centers.add(firstCenter);
-        points.remove(firstCenter);
 
-        double[] minDistanceFromCenter = new double[points.size()];
+        float[] minDistanceFromCenter = new float[points.size()];
         for (int i = 0; i < points.size(); i++) {
             minDistanceFromCenter[i] = euclideanDistance(firstCenter, points.get(i));
         }
 
         // Repeat until we have K centers
-        while (centers.size() < K) {
+        while (centers.size() < Math.min(K, points.size())) {
             // Find the point farthest from the current set of centers
-            Point farthestPoint = null;
-            double maxDistance = Double.NEGATIVE_INFINITY;
+            Tuple2<Float, Float> farthestPoint = null;
+            float maxDistance = Float.NEGATIVE_INFINITY;
 
             // Find the farthest point from the centers
             for (int i = 0; i < points.size(); i++) {
@@ -151,11 +155,10 @@ public class G018HW2{
 
             // Add the farthest point to the centers
             centers.add(farthestPoint);
-            points.remove(farthestPoint);
 
             // For each point update the distance from the nearest center
             for (int i = 0; i < points.size(); i++) {
-                double distFromLastCenter = euclideanDistance(farthestPoint, points.get(i));
+                float distFromLastCenter = euclideanDistance(farthestPoint, points.get(i));
                 minDistanceFromCenter[i] = Math.min(minDistanceFromCenter[i], distFromLastCenter);
             }
         }
@@ -163,7 +166,22 @@ public class G018HW2{
         return centers;
     }
 
-    public static float MRFFT(JavaRDD<Tuple2<Float, Float>> inputPoints, int k) {
+    public static float MRFFT(JavaRDD<Tuple2<Float, Float>> P, int K) {
+        JavaRDD<Tuple2<Float, Float>> coresets = P.mapPartitions(new FlatMapFunction<Iterator<Tuple2<Float, Float>>, Tuple2<Float, Float>>() {
+            @Override
+            public Iterator<Tuple2<Float, Float>> call(Iterator<Tuple2<Float, Float>> points) throws Exception {
+                List<Tuple2<Float, Float>> pointsList = new ArrayList<>();
+                points.forEachRemaining(pointsList::add);
+                List<Tuple2<Float, Float>> coresets = SequentialFFT(pointsList, K);
+                return coresets.iterator();
+            }
+        });
+
+        List<Tuple2<Float,Float>> cor = coresets.collect();
+        System.out.println("CORESETS:");
+        for (Tuple2<Float, Float> t : cor) {
+            System.out.println("Point (" +  t._1() + "," + t._2() + ")");
+        }
         return 1;
     }
 
@@ -208,7 +226,7 @@ public class G018HW2{
         System.out.println("Total number of points: " + totalPoints);
 
         // Execute MRFFT to get radius D
-        float D = MRFFT(inputPoints, K);
+        float D = 1; //MRFFT(inputPoints, K);
 
         long startTimeMRApprox = System.currentTimeMillis();
         MRApproxOutliers(inputPoints, D, M);
@@ -216,15 +234,12 @@ public class G018HW2{
         System.out.println("Running time of MRApproxOutliers = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
 
         // Test SequentialFFT method
-        List<Point> points = new ArrayList<>();
-        for (Tuple2<Float, Float> t : inputPoints.collect()) {
-            points.add(new Point(t._1(), t._2()));
-        }
-        int k_fft = 5;
-        List<Point> centers = SequentialFFT(points, k_fft);
+        List<Tuple2<Float, Float>> points = inputPoints.collect();
+        int k_fft = 18;
+        List<Tuple2<Float, Float>> centers = SequentialFFT(points, k_fft);
         System.out.println("Centers returned by SequentialFFT");
-        for (Point p : centers) {
-            System.out.println("Punto (" + p.x + "," + p.y + ")");
+        for (Tuple2<Float, Float> p : centers) {
+            System.out.println("Punto (" + p._1() + "," + p._2() + ")");
         }
 
         sc.close();
