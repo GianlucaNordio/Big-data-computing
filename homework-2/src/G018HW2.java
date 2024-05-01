@@ -1,10 +1,9 @@
-import org.apache.commons.collections.IteratorUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.codehaus.janino.Java;
+import org.apache.spark.broadcast.Broadcast;
 import scala.Tuple2;
 import java.util.*;
 import java.util.List;
@@ -17,6 +16,7 @@ import java.util.ArrayList;
  */
 public class G018HW2{
 
+    static JavaSparkContext sc;
     /**
      * Computes outliers using MapReduce approach based on specified parameters.
      * @param pointsRDD RDD of points.
@@ -107,17 +107,6 @@ public class G018HW2{
         return count;
     }
 
-    // Define a Point class to represent points in 2D space
-    public static class Point {
-        protected double x;
-        protected double y;
-
-        public Point(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
-
     // Calculate Euclidean distance between two points
     private static float euclideanDistance(Tuple2<Float, Float> p1, Tuple2<Float, Float> p2) {
         float dx = p1._1() - p2._1();
@@ -142,7 +131,7 @@ public class G018HW2{
         // Repeat until we have K centers
         while (centers.size() < Math.min(K, points.size())) {
             // Find the point farthest from the current set of centers
-            Tuple2<Float, Float> farthestPoint = null;
+            Tuple2<Float, Float> farthestPoint = points.get(0);
             float maxDistance = Float.NEGATIVE_INFINITY;
 
             // Find the farthest point from the centers
@@ -166,15 +155,12 @@ public class G018HW2{
         return centers;
     }
 
-    public static float MRFFT(JavaRDD<Tuple2<Float, Float>> P, int K) {
-        JavaRDD<Tuple2<Float, Float>> coresets = P.mapPartitions(new FlatMapFunction<Iterator<Tuple2<Float, Float>>, Tuple2<Float, Float>>() {
-            @Override
-            public Iterator<Tuple2<Float, Float>> call(Iterator<Tuple2<Float, Float>> points) throws Exception {
-                List<Tuple2<Float, Float>> pointsList = new ArrayList<>();
-                points.forEachRemaining(pointsList::add);
-                List<Tuple2<Float, Float>> coresets = SequentialFFT(pointsList, K);
-                return coresets.iterator();
-            }
+    public static float MRFFT(JavaSparkContext sc, JavaRDD<Tuple2<Float, Float>> P, int K) {
+        JavaRDD<Tuple2<Float, Float>> coresets = P.mapPartitions((FlatMapFunction<Iterator<Tuple2<Float, Float>>, Tuple2<Float, Float>>) points -> {
+            List<Tuple2<Float, Float>> pointsList = new ArrayList<>();
+            points.forEachRemaining(pointsList::add);
+            List<Tuple2<Float, Float>> coresets1 = SequentialFFT(pointsList, K);
+            return coresets1.iterator();
         });
 
         List<Tuple2<Float,Float>> cor = coresets.collect();
@@ -182,6 +168,7 @@ public class G018HW2{
         for (Tuple2<Float, Float> t : cor) {
             System.out.println("Point (" +  t._1() + "," + t._2() + ")");
         }
+
         return 1;
     }
 
@@ -198,7 +185,7 @@ public class G018HW2{
 
         // Create a Spark context
         SparkConf conf = new SparkConf(true).setAppName("G018HW2");
-        JavaSparkContext sc = new JavaSparkContext(conf);
+        sc = new JavaSparkContext(conf);
         sc.setLogLevel("WARN");
 
         // Print command-line arguments
@@ -226,7 +213,8 @@ public class G018HW2{
         System.out.println("Total number of points: " + totalPoints);
 
         // Execute MRFFT to get radius D
-        float D = 1; //MRFFT(inputPoints, K);
+        float D = 1;
+        // float D = MRFFT(sc, inputPoints, K);
 
         long startTimeMRApprox = System.currentTimeMillis();
         MRApproxOutliers(inputPoints, D, M);
