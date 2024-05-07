@@ -115,7 +115,7 @@ public class G018HW2{
     }
 
     public static List<Tuple2<Float, Float>> SequentialFFT(List<Tuple2<Float, Float>> points, int K) {
-        System.out.println(points.size());
+        //System.out.println(points.size());
 
         List<Tuple2<Float, Float>> centers = new ArrayList<>();
 
@@ -242,6 +242,7 @@ public class G018HW2{
         // Execute MRFFT to get radius D
         //float D = 1;
         float D = MRFFT(sc, inputPoints, K);
+        System.out.println("Radius = " + D);
 
         long startTimeMRApprox = System.currentTimeMillis();
         MRApproxOutliers(inputPoints, D, M);
