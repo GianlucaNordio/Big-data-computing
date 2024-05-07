@@ -8,6 +8,7 @@ import scala.Tuple2;
 import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Class G018HW2 implements algorithms for outlier detection using Apache Spark.
@@ -49,19 +50,28 @@ public class G018HW2{
             return new Tuple2<>(cell._1(), new Tuple2<>(cell._2(), new Tuple2<>(N3, N7)));
         });
 
-       // Compute the number of sure outliers
-        long sureOutliers = cellInfoRDD.filter(cell -> {
+        // Compute the number of sure outliers
+         JavaRDD<Long> sureOutliersRDD = cellInfoRDD.filter(cell -> {
             long N7 = cell._2()._2()._2();
             return N7 <= M;
-        }).map(cell -> cell._2()._1()).reduce(Long::sum);
+        }).map(cell -> cell._2()._1());
 
+        long sureOutliers = 0;
+        if (!sureOutliersRDD.isEmpty()) {
+            sureOutliers = sureOutliersRDD.reduce(Long::sum);
+        }
 
         // Compute the number of uncertain outliers
-        long uncertainPoints = cellInfoRDD.filter(cell -> {
+        JavaRDD<Long> uncertainPointsRDD = cellInfoRDD.filter(cell -> {
             long N3 = cell._2()._2()._1();
             long N7 = cell._2()._2()._2();
             return (N3 <= M && N7 > M);
-        }).map(cell -> cell._2()._1()).reduce(Long::sum);
+        }).map(cell -> cell._2()._1());
+
+        long uncertainPoints = 0;
+        if (!uncertainPointsRDD.isEmpty()) {
+            uncertainPoints = uncertainPointsRDD.reduce(Long::sum);
+        }
 
         // Print results
         System.out.println("Number of sure outliers = " + sureOutliers);
@@ -120,7 +130,8 @@ public class G018HW2{
         List<Tuple2<Float, Float>> centers = new ArrayList<>();
 
         // Choose the first point arbitrarily
-        Tuple2<Float, Float> firstCenter = points.get(0);
+        int randomIndex = ThreadLocalRandom.current().nextInt(points.size());
+        Tuple2<Float, Float> firstCenter = points.get(randomIndex);
         centers.add(firstCenter);
 
         float[] minDistanceFromCenter = new float[points.size()];
@@ -159,7 +170,7 @@ public class G018HW2{
         // ROUND 1
         long startTimeMRFFTRound1 = System.currentTimeMillis();
 
-        JavaRDD<Tuple2<Float, Float>> coresets = P.mapPartitions((FlatMapFunction<Iterator<Tuple2<Float, Float>>, Tuple2<Float, Float>>) points -> {
+        JavaRDD<Tuple2<Float, Float>> coresets = P.mapPartitions(points -> {
             List<Tuple2<Float, Float>> pointsList = new ArrayList<>();
             points.forEachRemaining(pointsList::add);
             List<Tuple2<Float, Float>> coresets1 = SequentialFFT(pointsList, K);
@@ -247,7 +258,7 @@ public class G018HW2{
         long startTimeMRApprox = System.currentTimeMillis();
         MRApproxOutliers(inputPoints, D, M);
         long endTimeMRApprox = System.currentTimeMillis();
-        System.out.println("Running time of MRApproxOutliers    = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
+        System.out.println("Running time of MRApproxOutliers = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
 
         /*
         // Test SequentialFFT method
