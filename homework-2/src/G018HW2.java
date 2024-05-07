@@ -156,20 +156,40 @@ public class G018HW2{
     }
 
     public static float MRFFT(JavaSparkContext sc, JavaRDD<Tuple2<Float, Float>> P, int K) {
+        // ROUND 1
         JavaRDD<Tuple2<Float, Float>> coresets = P.mapPartitions((FlatMapFunction<Iterator<Tuple2<Float, Float>>, Tuple2<Float, Float>>) points -> {
             List<Tuple2<Float, Float>> pointsList = new ArrayList<>();
             points.forEachRemaining(pointsList::add);
             List<Tuple2<Float, Float>> coresets1 = SequentialFFT(pointsList, K);
             return coresets1.iterator();
-        });
+        }).cache();
+        coresets.count();
 
+        // ROUND 2
         List<Tuple2<Float,Float>> cor = coresets.collect();
-        System.out.println("CORESETS:");
+        List<Tuple2<Float, Float>> centers = SequentialFFT(cor, K);
+        Broadcast<List<Tuple2<Float, Float>>> sharedVar = sc.broadcast(centers);
+        /*System.out.println("CORESETS:");
         for (Tuple2<Float, Float> t : cor) {
             System.out.println("Point (" +  t._1() + "," + t._2() + ")");
         }
+        */
 
-        return 1;
+        // ROUND 3
+        Float R = P.map(point -> {
+            List<Tuple2<Float, Float>> inputCenters = sharedVar.value(); // TODO confirm this
+            float minDistance = Float.POSITIVE_INFINITY;
+
+            for (Tuple2<Float, Float> center : inputCenters) {
+                float dist = euclideanDistance(point, center);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                }
+            }
+            return minDistance;
+        }).reduce(Float::max);
+
+        return R;
     }
 
     public static void main(String[] args) {
@@ -213,23 +233,24 @@ public class G018HW2{
         System.out.println("Total number of points: " + totalPoints);
 
         // Execute MRFFT to get radius D
-        float D = 1;
-        // float D = MRFFT(sc, inputPoints, K);
+        //float D = 1;
+        float D = MRFFT(sc, inputPoints, K);
 
         long startTimeMRApprox = System.currentTimeMillis();
         MRApproxOutliers(inputPoints, D, M);
         long endTimeMRApprox = System.currentTimeMillis();
-        System.out.println("Running time of MRApproxOutliers = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
+        System.out.println("Running time of MRApproxOutliers    = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
 
+        /*
         // Test SequentialFFT method
         List<Tuple2<Float, Float>> points = inputPoints.collect();
-        int k_fft = 18;
+        int k_fft = 5;
         List<Tuple2<Float, Float>> centers = SequentialFFT(points, k_fft);
         System.out.println("Centers returned by SequentialFFT");
         for (Tuple2<Float, Float> p : centers) {
             System.out.println("Punto (" + p._1() + "," + p._2() + ")");
         }
-
+        */
         sc.close();
     }
 }
