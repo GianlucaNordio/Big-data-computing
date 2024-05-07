@@ -157,6 +157,8 @@ public class G018HW2{
 
     public static float MRFFT(JavaSparkContext sc, JavaRDD<Tuple2<Float, Float>> P, int K) {
         // ROUND 1
+        long startTimeMRFFTRound1 = System.currentTimeMillis();
+
         JavaRDD<Tuple2<Float, Float>> coresets = P.mapPartitions((FlatMapFunction<Iterator<Tuple2<Float, Float>>, Tuple2<Float, Float>>) points -> {
             List<Tuple2<Float, Float>> pointsList = new ArrayList<>();
             points.forEachRemaining(pointsList::add);
@@ -165,17 +167,22 @@ public class G018HW2{
         }).cache();
         coresets.count();
 
+        long endTimeMRFFTRound1 = System.currentTimeMillis();
+        System.out.println("Running time of MRFFT Round 1 = " + (endTimeMRFFTRound1 - startTimeMRFFTRound1) + " ms");
+
         // ROUND 2
+        long startTimeMRFFTRound2 = System.currentTimeMillis();
+
         List<Tuple2<Float,Float>> cor = coresets.collect();
         List<Tuple2<Float, Float>> centers = SequentialFFT(cor, K);
         Broadcast<List<Tuple2<Float, Float>>> sharedVar = sc.broadcast(centers);
-        /*System.out.println("CORESETS:");
-        for (Tuple2<Float, Float> t : cor) {
-            System.out.println("Point (" +  t._1() + "," + t._2() + ")");
-        }
-        */
+
+        long endTimeMRFFTRound2 = System.currentTimeMillis();
+        System.out.println("Running time of MRFFT Round 2 = " + (endTimeMRFFTRound2 - startTimeMRFFTRound2) + " ms");
 
         // ROUND 3
+        long startTimeMRFFTRound3 = System.currentTimeMillis();
+
         Float R = P.map(point -> {
             List<Tuple2<Float, Float>> inputCenters = sharedVar.value(); // TODO confirm this
             float minDistance = Float.POSITIVE_INFINITY;
@@ -188,6 +195,9 @@ public class G018HW2{
             }
             return minDistance;
         }).reduce(Float::max);
+
+        long endTimeMRFFTRound3 = System.currentTimeMillis();
+        System.out.println("Running time of MRFFT Round 3 = " + (endTimeMRFFTRound3 - startTimeMRFFTRound3) + " ms");
 
         return R;
     }
@@ -209,10 +219,7 @@ public class G018HW2{
         sc.setLogLevel("WARN");
 
         // Print command-line arguments
-        System.out.println("Input File Path: " + inputFilePath);
-        System.out.println("M: " + M);
-        System.out.println("K: " + K);
-        System.out.println("L: " + L);
+        System.out.println(inputFilePath + " M=" + M + " K=" + K + " L=" + L);
 
         // Read input points into an RDD of strings
         JavaRDD<String> rawData = sc.textFile(inputFilePath);
@@ -230,7 +237,7 @@ public class G018HW2{
 
         // Print total number of points
         long totalPoints = inputPoints.count();
-        System.out.println("Total number of points: " + totalPoints);
+        System.out.println("Number of points = " + totalPoints);
 
         // Execute MRFFT to get radius D
         //float D = 1;
