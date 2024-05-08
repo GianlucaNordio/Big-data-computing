@@ -4,6 +4,7 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.storage.StorageLevel;
 import scala.Tuple2;
 import java.util.*;
 import java.util.List;
@@ -33,8 +34,7 @@ public class G018HW2{
             long i = (long) Math.floor(point._1() / cellSide);
             long j = (long) Math.floor(point._2() / cellSide);
             return new Tuple2<>(new Tuple2<>(i, j), 1L);
-        }).reduceByKey(Long::sum).cache();
-
+        }).reduceByKey(Long::sum).persist(StorageLevel.MEMORY_AND_DISK());
 
         List<Tuple2<Tuple2<Long, Long>, Long>> cellList = cellRDD.collect();
         Map<Tuple2<Long,Long>, Long> cellMap = new HashMap<>();
@@ -175,7 +175,7 @@ public class G018HW2{
             points.forEachRemaining(pointsList::add);
             List<Tuple2<Float, Float>> coresets1 = SequentialFFT(pointsList, K);
             return coresets1.iterator();
-        }).cache();
+        }).persist(StorageLevel.MEMORY_AND_DISK());
         coresets.count();
 
         long endTimeMRFFTRound1 = System.currentTimeMillis();
