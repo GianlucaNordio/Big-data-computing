@@ -11,18 +11,22 @@ import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Class G018HW2 implements algorithms for outlier detection using Apache Spark.
+ * Class G018HW2
  * Group 18
  * Authors: Lorenzo Cazzador, Giovanni Cinel, Gianluca Nordio
  */
 public class G018HW2{
 
+    // Shared Spark context for the application
     static JavaSparkContext sc;
+
     /**
-     * Computes outliers using MapReduce approach based on specified parameters.
-     * @param pointsRDD RDD of points.
-     * @param D Distance defining when to count a point as close.
-     * @param M Number of points close in order to not be an outlier.
+     * Uses a MapReduce approach to detect outliers in a dataset of 2D points.
+     * Outliers are identified based on the distance between points and the number of neighboring points within a specified distance.
+     *
+     * @param pointsRDD RDD of 2D points as tuples (x, y)
+     * @param D The distance threshold to consider a point close to another
+     * @param M The minimum number of neighboring points required for a point to not be considered an outlier
      */
     public static void MRApproxOutliers(JavaRDD<Tuple2<Float,Float>> pointsRDD, Float D, int M) {
 
@@ -80,6 +84,7 @@ public class G018HW2{
 
     /**
      * Computes the number of elements in the area of size 3x3 around a cell.
+     *
      * @param cell The cell coordinates.
      * @param cellRDD The map containing cell coordinates as key and number of points inside as value.
      * @return The number of points in the 3x3 area around the cell.
@@ -99,6 +104,7 @@ public class G018HW2{
 
     /**
      * Computes the number of elements in the area of size 7x7 around a cell.
+     *
      * @param cell The cell coordinates.
      * @param cellRDD The map containing cell coordinates as key and number of points inside as value.
      * @return The number of points in the 7x7 area around the cell.
@@ -116,13 +122,27 @@ public class G018HW2{
         return count;
     }
 
-    // Calculate Euclidean distance between two points
+    /**
+     * Calculates the Euclidean distance between two 2D points.
+     *
+     * @param p1 The first point as a tuple (x, y)
+     * @param p2 The second point as a tuple (x, y)
+     * @return The Euclidean distance between the two points
+     */
     private static float euclideanDistance(Tuple2<Float, Float> p1, Tuple2<Float, Float> p2) {
         float dx = p1._1() - p2._1();
         float dy = p1._2() - p2._2();
         return (float) Math.sqrt(dx * dx + dy * dy);
     }
 
+    /**
+     * Implements the Sequential FFT algorithm to select a specified number of centers from a dataset of points.
+     * The algorithm iteratively selects the point that is the furthest from any existing center.
+     *
+     * @param points A list of 2D points as tuples (x, y)
+     * @param K The number of centers to select
+     * @return A list of selected centers
+     */
     public static List<Tuple2<Float, Float>> SequentialFFT(List<Tuple2<Float, Float>> points, int K) {
 
         List<Tuple2<Float, Float>> centers = new ArrayList<>();
@@ -132,6 +152,7 @@ public class G018HW2{
         Tuple2<Float, Float> firstCenter = points.get(randomIndex);
         centers.add(firstCenter);
 
+        // Initialize minimum distance from any center
         float[] minDistanceFromCenter = new float[points.size()];
         for (int i = 0; i < points.size(); i++) {
             minDistanceFromCenter[i] = euclideanDistance(firstCenter, points.get(i));
@@ -163,7 +184,15 @@ public class G018HW2{
 
         return centers;
     }
-
+    /**
+     * Uses a MapReduce-based FFT approach to find a suitable radius for clustering.
+     * This process involves multiple rounds of computation to refine the center selection and radius.
+     *
+     * @param sc The shared Spark context
+     * @param P An RDD of 2D points as tuples (x, y)
+     * @param K The number of centers to select
+     * @return The calculated maximum radius
+     */
     public static float MRFFT(JavaSparkContext sc, JavaRDD<Tuple2<Float, Float>> P, int K) {
         // ROUND 1
         long startTimeMRFFTRound1 = System.currentTimeMillis();
@@ -193,7 +222,7 @@ public class G018HW2{
         long startTimeMRFFTRound3 = System.currentTimeMillis();
 
         Float R = P.map(point -> {
-            List<Tuple2<Float, Float>> inputCenters = sharedVar.value(); // TODO confirm this
+            List<Tuple2<Float, Float>> inputCenters = sharedVar.value();
             float minDistance = Float.POSITIVE_INFINITY;
 
             for (Tuple2<Float, Float> center : inputCenters) {
@@ -210,7 +239,12 @@ public class G018HW2{
 
         return R;
     }
-
+    /**
+     * The main function initializes the Spark environment and executes outlier detection algorithms.
+     * The results of the outlier detection are printed to the console.
+     *
+     * @param args Command-line arguments: <inputFilePath> <M> <K> <L>
+     */
     public static void main(String[] args) {
         if (args.length < 4) {
             System.err.println("Usage: java Main <inputFilePath> <M> <K> <L>");
@@ -253,11 +287,13 @@ public class G018HW2{
         float D = MRFFT(sc, inputPoints, K);
         System.out.println("Radius = " + D);
 
+        // Execute MRApproxOutliers with radius D returned by MRFFT
         long startTimeMRApprox = System.currentTimeMillis();
         MRApproxOutliers(inputPoints, D, M);
         long endTimeMRApprox = System.currentTimeMillis();
         System.out.println("Running time of MRApproxOutliers = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
 
+        // Close Spark context
         sc.close();
     }
 }
