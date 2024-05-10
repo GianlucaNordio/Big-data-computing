@@ -224,7 +224,7 @@ public class G018HW2{
 
         // Create a Spark context
         SparkConf conf = new SparkConf(true).setAppName("G018HW2");
-        conf.set("spark.locality.wait", "0s");,
+        conf.set("spark.locality.wait", "0s");
         sc = new JavaSparkContext(conf);
         sc.setLogLevel("WARN");
 
