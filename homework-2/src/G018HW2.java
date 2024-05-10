@@ -2,7 +2,6 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 import scala.Tuple2;
@@ -125,7 +124,6 @@ public class G018HW2{
     }
 
     public static List<Tuple2<Float, Float>> SequentialFFT(List<Tuple2<Float, Float>> points, int K) {
-        //System.out.println(points.size());
 
         List<Tuple2<Float, Float>> centers = new ArrayList<>();
 
@@ -226,6 +224,7 @@ public class G018HW2{
 
         // Create a Spark context
         SparkConf conf = new SparkConf(true).setAppName("G018HW2");
+        conf.set("spark.locality.wait", "0s");,
         sc = new JavaSparkContext(conf);
         sc.setLogLevel("WARN");
 
@@ -251,7 +250,6 @@ public class G018HW2{
         System.out.println("Number of points = " + totalPoints);
 
         // Execute MRFFT to get radius D
-        //float D = 1;
         float D = MRFFT(sc, inputPoints, K);
         System.out.println("Radius = " + D);
 
@@ -260,16 +258,6 @@ public class G018HW2{
         long endTimeMRApprox = System.currentTimeMillis();
         System.out.println("Running time of MRApproxOutliers = " + (endTimeMRApprox - startTimeMRApprox) + " ms");
 
-        /*
-        // Test SequentialFFT method
-        List<Tuple2<Float, Float>> points = inputPoints.collect();
-        int k_fft = 5;
-        List<Tuple2<Float, Float>> centers = SequentialFFT(points, k_fft);
-        System.out.println("Centers returned by SequentialFFT");
-        for (Tuple2<Float, Float> p : centers) {
-            System.out.println("Punto (" + p._1() + "," + p._2() + ")");
-        }
-        */
         sc.close();
     }
 }
