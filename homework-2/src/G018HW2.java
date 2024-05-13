@@ -188,12 +188,11 @@ public class G018HW2{
      * Uses a MapReduce-based FFT approach to find a suitable radius for clustering.
      * This process involves multiple rounds of computation to refine the center selection and radius.
      *
-     * @param sc The shared Spark context
      * @param P An RDD of 2D points as tuples (x, y)
      * @param K The number of centers to select
      * @return The calculated maximum radius
      */
-    public static float MRFFT(JavaSparkContext sc, JavaRDD<Tuple2<Float, Float>> P, int K) {
+    public static float MRFFT(JavaRDD<Tuple2<Float, Float>> P, int K) {
         // ROUND 1
         long startTimeMRFFTRound1 = System.currentTimeMillis();
 
@@ -284,7 +283,7 @@ public class G018HW2{
         System.out.println("Number of points = " + totalPoints);
 
         // Execute MRFFT to get radius D
-        float D = MRFFT(sc, inputPoints, K);
+        float D = MRFFT(inputPoints, K);
         System.out.println("Radius = " + D);
 
         // Execute MRApproxOutliers with radius D returned by MRFFT
