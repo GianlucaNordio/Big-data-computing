@@ -277,7 +277,7 @@ public class G018HW2{
         });
 
         // Repartition RDD into L partitions
-        inputPoints = inputPoints.repartition(L);
+        inputPoints = inputPoints.repartition(L).cache();
 
         // Print total number of points
         long totalPoints = inputPoints.count();
