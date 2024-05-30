@@ -1,5 +1,6 @@
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.StorageLevels;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
@@ -64,8 +65,11 @@ public class G018HW3 {
                         long batchSize = batch.count();
                         streamLength[0] += batchSize;
 
-                        batch.foreach(s -> {
-                            long item = Long.parseLong(s);
+
+                        JavaRDD<Long> elements = batch.map(s -> Long.parseLong(s));
+
+
+                        for (Long item : elements.collect()){
 
                             histogram.put(item, histogram.getOrDefault(item, 0L) + 1);
 
@@ -89,7 +93,7 @@ public class G018HW3 {
                                     reservoir.add(item);
                                 }
                             }
-                        });
+                        }
 
                         if (streamLength[0] >= n) {
                             stoppingSemaphore.release();
