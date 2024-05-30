@@ -59,12 +59,15 @@ public class G018HW3 {
                 .foreachRDD((batch, time) -> {
                     if (streamLength[0] < n) {
                         long batchSize = batch.count();
+
+                        if(batchSize + streamLength[0] > n)
+                            batchSize = n - streamLength[0];
+
                         streamLength[0] += batchSize;
 
                         List<Long> elements = batch.map(s -> Long.parseLong(s)).collect();
-
+                        int counter = 0;
                         for (Long item : elements){
-
                             histogram.put(item, histogram.getOrDefault(item, 0L) + 1);
 
                             if (stickySampling.containsKey(item)) {
@@ -87,6 +90,9 @@ public class G018HW3 {
                                     reservoir.add(item);
                                 }
                             }
+                            counter++;
+                            if(batchSize == counter)
+                                break;
                         }
 
                         if (streamLength[0] >= n) {
