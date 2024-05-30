@@ -53,7 +53,7 @@ public class G018HW3 {
         streamLength[0] = 0L;
         HashMap<Long, Long> histogram = new HashMap<>();
         HashMap<Long, Long> stickySampling = new HashMap<>();
-        PriorityQueue<Long> reservoir = new PriorityQueue<>();
+        ArrayList<Long> reservoir = new ArrayList<>();
 
         int m = (int) Math.floor(1 / phi);
         Random random = new Random();
@@ -80,12 +80,14 @@ public class G018HW3 {
                                 }
                             }
 
-                            if (reservoir.size() < m) {
+                            int size = reservoir.size();
+
+                            if (size < m) {
                                 reservoir.add(pair.getKey());
                             } else {
-                                int idx = random.nextInt((int) streamLength[0]);
-                                if (idx < m) {
-                                    reservoir.poll();
+                                double p = random.nextDouble();
+                                if (p > ((double) m / size)) {
+                                    reservoir.remove(random.nextInt(size));
                                     reservoir.add(pair.getKey());
                                 }
                             }
