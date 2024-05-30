@@ -67,6 +67,8 @@ public class G018HW3 {
                         batch.foreach(s -> {
                             long item = Long.parseLong(s);
 
+                            histogram.put(item, histogram.getOrDefault(item, 0L) + 1);
+
                             if (stickySampling.containsKey(item)) {
                                 stickySampling.put(item, stickySampling.get(item) + 1);
                             } else {
@@ -87,28 +89,19 @@ public class G018HW3 {
                             }
                         });
 
-                        
-//                        if (batchSize > 0) {
-//                            System.out.println("Batch size at time [" + time + "] is: " + batchSize);
-//                        }
                         if (streamLength[0] >= n) {
                             stoppingSemaphore.release();
                         }
                     }
                 });
 
-        //System.out.println("Starting streaming engine");
         sc.start();
-        //System.out.println("Waiting for shutdown condition");
         stoppingSemaphore.acquire();
-        //System.out.println("Stopping the streaming engine");
-
         sc.stop(false, false);
-        //System.out.println("Streaming engine stopped");
 
         System.out.println("Number of items processed = " + streamLength[0]);
 
-        long freqThreshold = (long) Math.ceil(phi * streamLength[0]);
+        long freqThreshold = (long) Math.floor(phi * streamLength[0]);
         ArrayList<Long> trueFrequentItems = new ArrayList<>();
         for (Map.Entry<Long, Long> entry : histogram.entrySet()) {
             if (entry.getValue() >= freqThreshold) {
@@ -123,10 +116,10 @@ public class G018HW3 {
             System.out.println(item);
         }
 
-        ArrayList<Long> reservoirSample = new ArrayList<>(reservoir);
-        reservoirSample.sort(Long::compareTo);
+
+        reservoir.sort(Long::compareTo);
         System.out.println("Reservoir sample:");
-        for (Long item : reservoirSample) {
+        for (Long item : reservoir) {
             System.out.println(item);
         }
 
@@ -134,9 +127,7 @@ public class G018HW3 {
 
         ArrayList<Long> stickyFrequentItems = new ArrayList<>();
         for (Map.Entry<Long, Long> entry : stickySampling.entrySet()) {
-            if (entry.getValue() >= freqThreshold) {
                 stickyFrequentItems.add(entry.getKey());
-            }
         }
         stickyFrequentItems.sort(Long::compareTo);
         System.out.println("Epsilon-Approximate Frequent Items:");
