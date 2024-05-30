@@ -19,6 +19,10 @@ import java.util.PriorityQueue;
 
 public class G018HW3 {
 
+    public static boolean isNotInRange(double value) {
+        return value < 0 || value > 1;
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length != 5) {
             throw new IllegalArgumentException("USAGE: n, phi, epsilon, delta, portExp");
@@ -30,6 +34,10 @@ public class G018HW3 {
         float delta = Float.parseFloat(args[3]);
         int portExp = Integer.parseInt(args[4]);
 
+        if( isNotInRange(phi)  || isNotInRange(epsilon) || isNotInRange(delta) ){
+            throw new IllegalArgumentException("phi, epsilon and delta must be between 0 and 1");
+        }
+
         System.out.println("Input parameters:");
         System.out.println("n = " + n);
         System.out.println("phi = " + phi);
@@ -37,9 +45,7 @@ public class G018HW3 {
         System.out.println("delta = " + delta);
         System.out.println("portExp = " + portExp);
 
-        SparkConf conf = new SparkConf(true)
-                .setMaster("local[*]") // remove this line if running on the cluster
-                .setAppName("G018HW3");
+        SparkConf conf = new SparkConf(true).setAppName("G018HW3");
 
         JavaStreamingContext sc = new JavaStreamingContext(conf, Durations.milliseconds(10));
         sc.sparkContext().setLogLevel("ERROR");
