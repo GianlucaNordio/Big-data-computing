@@ -1,20 +1,16 @@
-import org.apache.hadoop.util.hash.Hash;
+
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.StorageLevels;
 import org.apache.spark.streaming.Durations;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import scala.Tuple2;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.PriorityQueue;
 
 public class G018HW3 {
@@ -59,7 +55,7 @@ public class G018HW3 {
         HashMap<Long, Long> stickySampling = new HashMap<>();
         PriorityQueue<Long> reservoir = new PriorityQueue<>();
 
-        int m = (int) Math.ceil(1 / phi);
+        int m = (int) Math.floor(1 / phi);
         Random random = new Random();
 
         sc.socketTextStream("algo.dei.unipd.it", portExp, StorageLevels.MEMORY_AND_DISK)
@@ -104,11 +100,11 @@ public class G018HW3 {
                     }
                 });
 
-        System.out.println("Starting streaming engine");
+        //System.out.println("Starting streaming engine");
         sc.start();
-        System.out.println("Waiting for shutdown condition");
+        //System.out.println("Waiting for shutdown condition");
         stoppingSemaphore.acquire();
-        System.out.println("Stopping the streaming engine");
+        //System.out.println("Stopping the streaming engine");
 
         sc.stop(false, false);
         System.out.println("Streaming engine stopped");
