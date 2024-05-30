@@ -64,35 +64,30 @@ public class G018HW3 {
                         long batchSize = batch.count();
                         streamLength[0] += batchSize;
 
-                        Map<Long, Long> batchItems = batch
-                                .mapToPair(s -> new Tuple2<>(Long.parseLong(s), 1L))
-                                .reduceByKey((i1, i2) -> 1L)
-                                .collectAsMap();
+                        batch.foreach(s -> {
+                            long item = Long.parseLong(s);
 
-                        for (Map.Entry<Long, Long> pair : batchItems.entrySet()) {
-                            histogram.put(pair.getKey(), histogram.getOrDefault(pair.getKey(), 0L) + 1L);
-
-                            if (stickySampling.containsKey(pair.getKey())) {
-                                stickySampling.put(pair.getKey(), stickySampling.get(pair.getKey()) + 1);
+                            if (stickySampling.containsKey(item)) {
+                                stickySampling.put(item, stickySampling.get(item) + 1);
                             } else {
                                 if (random.nextDouble() <= epsilon) {
-                                    stickySampling.put(pair.getKey(), 1L);
+                                    stickySampling.put(item, 1L);
                                 }
                             }
 
                             int size = reservoir.size();
-
                             if (size < m) {
-                                reservoir.add(pair.getKey());
+                                reservoir.add(item);
                             } else {
                                 double p = random.nextDouble();
                                 if (p > ((double) m / size)) {
                                     reservoir.remove(random.nextInt(size));
-                                    reservoir.add(pair.getKey());
+                                    reservoir.add(item);
                                 }
                             }
-                        }
+                        });
 
+                        
 //                        if (batchSize > 0) {
 //                            System.out.println("Batch size at time [" + time + "] is: " + batchSize);
 //                        }
@@ -111,7 +106,7 @@ public class G018HW3 {
         sc.stop(false, false);
         //System.out.println("Streaming engine stopped");
 
-        //System.out.println("Number of items processed = " + streamLength[0]);
+        System.out.println("Number of items processed = " + streamLength[0]);
 
         long freqThreshold = (long) Math.ceil(phi * streamLength[0]);
         ArrayList<Long> trueFrequentItems = new ArrayList<>();
