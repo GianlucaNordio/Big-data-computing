@@ -91,9 +91,9 @@ public class G018HW3 {
                             }
                         }
 
-                        if (batchSize > 0) {
-                            System.out.println("Batch size at time [" + time + "] is: " + batchSize);
-                        }
+//                        if (batchSize > 0) {
+//                            System.out.println("Batch size at time [" + time + "] is: " + batchSize);
+//                        }
                         if (streamLength[0] >= n) {
                             stoppingSemaphore.release();
                         }
@@ -107,9 +107,9 @@ public class G018HW3 {
         //System.out.println("Stopping the streaming engine");
 
         sc.stop(false, false);
-        System.out.println("Streaming engine stopped");
+        //System.out.println("Streaming engine stopped");
 
-        System.out.println("Number of items processed = " + streamLength[0]);
+        //System.out.println("Number of items processed = " + streamLength[0]);
 
         long freqThreshold = (long) Math.ceil(phi * streamLength[0]);
         ArrayList<Long> trueFrequentItems = new ArrayList<>();
