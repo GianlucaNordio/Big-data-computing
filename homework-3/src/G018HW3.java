@@ -72,7 +72,9 @@ public class G018HW3 {
                             if (stickySampling.containsKey(item)) {
                                 stickySampling.put(item, stickySampling.get(item) + 1);
                             } else {
-                                if (random.nextDouble() <= epsilon) {
+                                double p = random.nextDouble();
+                                double r = Math.log(1.0 / (phi * delta)) / epsilon;;
+                                if (p > (r/n)) {
                                     stickySampling.put(item, 1L);
                                 }
                             }
