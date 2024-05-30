@@ -6,13 +6,9 @@ import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import scala.Tuple2;
 
-import java.util.ArrayList;
+import java.util.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.Semaphore;
-import java.util.PriorityQueue;
 
 public class G018HW3 {
 
@@ -65,11 +61,9 @@ public class G018HW3 {
                         long batchSize = batch.count();
                         streamLength[0] += batchSize;
 
+                        List<Long> elements = batch.map(s -> Long.parseLong(s)).collect();
 
-                        JavaRDD<Long> elements = batch.map(s -> Long.parseLong(s));
-
-
-                        for (Long item : elements.collect()){
+                        for (Long item : elements){
 
                             histogram.put(item, histogram.getOrDefault(item, 0L) + 1);
 
