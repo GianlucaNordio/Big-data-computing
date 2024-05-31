@@ -130,7 +130,7 @@ public class G018HW3 {
         }
 
         System.out.println("Number of items in the hash table used by Sticky Sampling = " + stickySampling.size());
-
+        // TODO didn't get where we do the select only the elements with frequency >= (phi-epsilon)*n
         ArrayList<Long> stickyFrequentItems = new ArrayList<>();
         for (Map.Entry<Long, Long> entry : stickySampling.entrySet()) {
                 stickyFrequentItems.add(entry.getKey());
