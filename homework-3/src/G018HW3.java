@@ -75,7 +75,7 @@ public class G018HW3 {
                             } else {
                                 double p = random.nextDouble();
                                 double r = Math.log(1.0 / (phi * delta)) / epsilon;;
-                                if (p > (r/n)) {
+                                if (p > (r/n)) { // TODO shouldn't it be <= ? 
                                     stickySampling.put(item, 1L);
                                 }
                             }
