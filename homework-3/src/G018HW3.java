@@ -75,7 +75,7 @@ public class G018HW3 {
                             } else {
                                 double p = random.nextDouble();
                                 double r = Math.log(1.0 / (phi * delta)) / epsilon;;
-                                if (p > (r/n)) { // TODO shouldn't it be <= ? 
+                                if (p > (r/n)) { // TODO shouldn't it be <= ?
                                     stickySampling.put(item, 1L);
                                 }
                             }
@@ -85,7 +85,7 @@ public class G018HW3 {
                                 reservoir.add(item);
                             } else {
                                 double p = random.nextDouble();
-                                if (p > ((double) m / size)) {
+                                if (p > ((double) m / size)) { // TODO shouldn't it be <=
                                     reservoir.remove(random.nextInt(size));
                                     reservoir.add(item);
                                 }
