@@ -73,9 +73,10 @@ public class G018HW3 {
                             if (stickySampling.containsKey(item)) {
                                 stickySampling.put(item, stickySampling.get(item) + 1);
                             } else {
-                                double p = random.nextDouble();
-                                double r = Math.log(1.0 / (phi * delta)) / epsilon;;
-                                if (p > (r/n)) { // TODO shouldn't it be <= ?
+                                double x = random.nextDouble();
+                                double r = Math.log(1.0 / (phi * delta)) / epsilon;
+                                double p = r/n;
+                                if (x <= p) {
                                     stickySampling.put(item, 1L);
                                 }
                             }
@@ -84,8 +85,9 @@ public class G018HW3 {
                             if (size < m) {
                                 reservoir.add(item);
                             } else {
-                                double p = random.nextDouble();
-                                if (p > ((double) m / size)) { // TODO shouldn't it be <=
+                                double x = random.nextDouble();
+                                double p = (double) m / size;
+                                if (x <= p) {
                                     reservoir.remove(random.nextInt(size));
                                     reservoir.add(item);
                                 }
@@ -130,9 +132,10 @@ public class G018HW3 {
         }
 
         System.out.println("Number of items in the hash table used by Sticky Sampling = " + stickySampling.size());
-        // TODO didn't get where we do the select only the elements with frequency >= (phi-epsilon)*n
         ArrayList<Long> stickyFrequentItems = new ArrayList<>();
+        double stickyThreshold = (phi - epsilon) * n;
         for (Map.Entry<Long, Long> entry : stickySampling.entrySet()) {
+            if (entry.getValue() >= stickyThreshold)
                 stickyFrequentItems.add(entry.getKey());
         }
         stickyFrequentItems.sort(Long::compareTo);
