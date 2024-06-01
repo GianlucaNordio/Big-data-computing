@@ -13,7 +13,7 @@ import java.util.concurrent.Semaphore;
 public class G018HW3 {
 
     public static boolean isNotInRange(double value) {
-        return value < 0 || value > 1;
+        return value <= 0 || value >= 1;
     }
 
     public static void main(String[] args) throws Exception {
@@ -52,7 +52,7 @@ public class G018HW3 {
         HashMap<Long, Long> stickySampling = new HashMap<>();
         ArrayList<Long> reservoir = new ArrayList<>();
 
-        int m = (int) Math.floor(1 / phi);
+        int m = (int) Math.ceil(1 / phi);
         Random random = new Random();
 
         sc.socketTextStream("algo.dei.unipd.it", portExp, StorageLevels.MEMORY_AND_DISK)
@@ -63,11 +63,11 @@ public class G018HW3 {
                         if(batchSize + streamLength[0] > n)
                             batchSize = n - streamLength[0];
 
-                        streamLength[0] += batchSize;
-
-                        List<Long> elements = batch.map(s -> Long.parseLong(s)).collect();
+                        List<Long> elements = batch.map(Long::parseLong).collect();
                         int counter = 0;
                         for (Long item : elements){
+                            counter++;
+
                             histogram.put(item, histogram.getOrDefault(item, 0L) + 1);
 
                             if (stickySampling.containsKey(item)) {
@@ -75,7 +75,7 @@ public class G018HW3 {
                             } else {
                                 double x = random.nextDouble();
                                 double r = Math.log(1.0 / (phi * delta)) / epsilon;
-                                double p = r/n;
+                                double p = r / n;
                                 if (x <= p) {
                                     stickySampling.put(item, 1L);
                                 }
@@ -86,16 +86,18 @@ public class G018HW3 {
                                 reservoir.add(item);
                             } else {
                                 double x = random.nextDouble();
-                                double p = (double) m / size;
+                                double p = (double) m / (streamLength[0] + counter);
                                 if (x <= p) {
                                     reservoir.remove(random.nextInt(size));
                                     reservoir.add(item);
                                 }
                             }
-                            counter++;
+
                             if(batchSize == counter)
                                 break;
                         }
+
+                        streamLength[0] += batchSize;
 
                         if (streamLength[0] >= n) {
                             stoppingSemaphore.release();
