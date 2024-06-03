@@ -38,7 +38,7 @@ public class G018HW3 {
         System.out.println("delta = " + delta);
         System.out.println("portExp = " + portExp);
 
-        SparkConf conf = new SparkConf(true).setAppName("G018HW3");
+        SparkConf conf = new SparkConf(true).setMaster("local[*]")setAppName("G018HW3");
 
         JavaStreamingContext sc = new JavaStreamingContext(conf, Durations.milliseconds(10));
         sc.sparkContext().setLogLevel("ERROR");
@@ -113,8 +113,7 @@ public class G018HW3 {
 
         long freqThreshold = (long) Math.floor(phi * streamLength[0]);
         ArrayList<Long> trueFrequentItems = new ArrayList<>();
-        // TODO check if the histrogram is not empty (might be the problem causing to not find any element)
-        // If that is the case it is because the histogram is not updated (Croki had the same problem)
+        
         for (Map.Entry<Long, Long> entry : histogram.entrySet()) {
             if (entry.getValue() >= freqThreshold) {
                 trueFrequentItems.add(entry.getKey());
