@@ -38,7 +38,7 @@ public class G018HW3 {
         System.out.println("delta = " + delta);
         System.out.println("portExp = " + portExp);
 
-        SparkConf conf = new SparkConf(true).setMaster("local[*]")setAppName("G018HW3");
+        SparkConf conf = new SparkConf(true).setMaster("local[*]").setAppName("G018HW3");
 
         JavaStreamingContext sc = new JavaStreamingContext(conf, Durations.milliseconds(10));
         sc.sparkContext().setLogLevel("ERROR");
