@@ -109,13 +109,13 @@ public class G018HW3 {
         stoppingSemaphore.acquire();
         sc.stop(false, false);
 
-        System.out.println("Number of items processed = " + streamLength[0]);
+        System.out.println("Size of the data structure used to compute the true frequent items = " + histogram.size());
 
         long freqThreshold = (long) Math.floor(phi * streamLength[0]);
         ArrayList<Long> trueFrequentItems = new ArrayList<>();
         
         for (Map.Entry<Long, Long> entry : histogram.entrySet()) {
-            if (entry.getValue() >= freqThreshold) {
+            if (entry.getValue() > freqThreshold) {
                 trueFrequentItems.add(entry.getKey());
             }
         }
@@ -127,13 +127,20 @@ public class G018HW3 {
             System.out.println(item);
         }
 
+        char positive_sign = '+';
+        char negative_sign = '-';
 
         reservoir.sort(Long::compareTo);
+        System.out.println("Size m of the Reservoir sample = " + m);
+        System.out.println("Number of estimated frequent items = " + reservoir.size());
         System.out.println("Reservoir sample:");
         for (Long item : reservoir) {
-            System.out.println(item);
+            if(trueFrequentItems.contains(item))
+                System.out.println(item + " " + positive_sign);
+            System.out.println(item + " " + negative_sign);
         }
 
+        System.out.println("Size of the Hash Table =" + stickySampling.size());
         System.out.println("Number of items in the hash table used by Sticky Sampling = " + stickySampling.size());
         ArrayList<Long> stickyFrequentItems = new ArrayList<>();
         double stickyThreshold = (phi - epsilon) * n;
@@ -144,7 +151,9 @@ public class G018HW3 {
         stickyFrequentItems.sort(Long::compareTo);
         System.out.println("Epsilon-Approximate Frequent Items:");
         for (Long item : stickyFrequentItems) {
-            System.out.println(item);
+            if(trueFrequentItems.contains(item))
+                System.out.println(item + " " + positive_sign);
+            System.out.println(item + " " + negative_sign);
         }
     }
 }
