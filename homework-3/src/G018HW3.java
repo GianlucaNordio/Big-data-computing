@@ -36,7 +36,7 @@ public class G018HW3 {
         System.out.print(" phi = " + phi);
         System.out.print(" epsilon = " + epsilon);
         System.out.print(" delta = " + delta);
-        System.out.println(" portExp = " + portExp);
+        System.out.println(" port = " + portExp);
 
         SparkConf conf = new SparkConf(true).setMaster("local[*]").setAppName("G018HW3");
 
