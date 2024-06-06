@@ -138,7 +138,8 @@ public class G018HW3 {
         for (Long item : reservoir) {
             if(trueFrequentItems.contains(item))
                 System.out.println(item + " " + positive_sign);
-            System.out.println(item + " " + negative_sign);
+            else
+                System.out.println(item + " " + negative_sign);
         }
 
         System.out.println("STICKY SAMPLING");
@@ -155,7 +156,8 @@ public class G018HW3 {
         for (Long item : stickyFrequentItems) {
             if(trueFrequentItems.contains(item))
                 System.out.println(item + " " + positive_sign);
-            System.out.println(item + " " + negative_sign);
+            else
+                System.out.println(item + " " + negative_sign);
         }
     }
 }
