@@ -1,10 +1,8 @@
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.StorageLevels;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import scala.Tuple2;
 
 import java.util.*;
 
@@ -111,11 +109,11 @@ public class G018HW3 {
         System.out.println("EXACT ALGORITHM");
         System.out.println("Number of items in the data structure = " + histogram.size());
 
-        long freqThreshold = (long) Math.floor(phi * streamLength[0]);
+        double freqThreshold = phi * streamLength[0];
         ArrayList<Long> trueFrequentItems = new ArrayList<>();
         
         for (Map.Entry<Long, Long> entry : histogram.entrySet()) {
-            if (entry.getValue() > freqThreshold) {
+            if (entry.getValue() >= freqThreshold) {
                 trueFrequentItems.add(entry.getKey());
             }
         }
@@ -132,14 +130,13 @@ public class G018HW3 {
 
         System.out.println("RESERVOIR SAMPLING");
         System.out.println("Size m of the sample = " + m);
-        Set<Long> distinctReservoirMap = new HashSet<>(reservoir);
-        List<Long> distinctReservoir = new ArrayList<>(distinctReservoirMap);
-        distinctReservoir.sort(Long::compareTo);
+        Set<Long> distinctReservoir = new TreeSet<>(reservoir);
         System.out.println("Number of estimated frequent items = " + distinctReservoir.size());
         System.out.println("Estimated frequent items:");
 
         for (Long item : distinctReservoir) {
-            if(trueFrequentItems.contains(item))
+            Long value = histogram.getOrDefault(item, 0L);
+            if(value >= freqThreshold)
                 System.out.println(item + " " + positive_sign);
             else
                 System.out.println(item + " " + negative_sign);
@@ -157,7 +154,8 @@ public class G018HW3 {
         System.out.println("Number of estimated frequent items = " + stickyFrequentItems.size());
         System.out.println("Estimated frequent items:");
         for (Long item : stickyFrequentItems) {
-            if(trueFrequentItems.contains(item))
+            Long value = histogram.getOrDefault(item, 0L);
+            if(value >= freqThreshold)
                 System.out.println(item + " " + positive_sign);
             else
                 System.out.println(item + " " + negative_sign);
