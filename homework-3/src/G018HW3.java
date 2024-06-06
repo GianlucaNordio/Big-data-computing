@@ -31,12 +31,12 @@ public class G018HW3 {
             throw new IllegalArgumentException("phi, epsilon and delta must be between 0 and 1");
         }
 
-        System.out.println("Input parameters:");
-        System.out.println("n = " + n);
-        System.out.println("phi = " + phi);
-        System.out.println("epsilon = " + epsilon);
-        System.out.println("delta = " + delta);
-        System.out.println("portExp = " + portExp);
+        System.out.println("INPUT PROPERTIES");
+        System.out.print("n = " + n);
+        System.out.print(" phi = " + phi);
+        System.out.print(" epsilon = " + epsilon);
+        System.out.print(" delta = " + delta);
+        System.out.println(" portExp = " + portExp);
 
         SparkConf conf = new SparkConf(true).setMaster("local[*]").setAppName("G018HW3");
 
@@ -108,8 +108,8 @@ public class G018HW3 {
         sc.start();
         stoppingSemaphore.acquire();
         sc.stop(false, false);
-
-        System.out.println("Size of the data structure used to compute the true frequent items = " + histogram.size());
+        System.out.println("EXACT ALGORITHM");
+        System.out.println("Number of items in the data structure = " + histogram.size());
 
         long freqThreshold = (long) Math.floor(phi * streamLength[0]);
         ArrayList<Long> trueFrequentItems = new ArrayList<>();
@@ -131,17 +131,18 @@ public class G018HW3 {
         char negative_sign = '-';
 
         reservoir.sort(Long::compareTo);
-        System.out.println("Size m of the Reservoir sample = " + m);
+        System.out.println("RESERVOIR SAMPLING");
+        System.out.println("Size m of the sample = " + m);
         System.out.println("Number of estimated frequent items = " + reservoir.size());
-        System.out.println("Reservoir sample:");
+        System.out.println("Estimated frequent items:");
         for (Long item : reservoir) {
             if(trueFrequentItems.contains(item))
                 System.out.println(item + " " + positive_sign);
             System.out.println(item + " " + negative_sign);
         }
 
-        System.out.println("Size of the Hash Table =" + stickySampling.size());
-        System.out.println("Number of items in the hash table used by Sticky Sampling = " + stickySampling.size());
+        System.out.println("STICKY SAMPLING");
+        System.out.println("Number of items in the Hash Table = " + stickySampling.size());
         ArrayList<Long> stickyFrequentItems = new ArrayList<>();
         double stickyThreshold = (phi - epsilon) * n;
         for (Map.Entry<Long, Long> entry : stickySampling.entrySet()) {
@@ -149,7 +150,8 @@ public class G018HW3 {
                 stickyFrequentItems.add(entry.getKey());
         }
         stickyFrequentItems.sort(Long::compareTo);
-        System.out.println("Epsilon-Approximate Frequent Items:");
+        System.out.println("Number of estimated frequent items = " + stickyFrequentItems.size());
+        System.out.println("Estimated frequent items:");
         for (Long item : stickyFrequentItems) {
             if(trueFrequentItems.contains(item))
                 System.out.println(item + " " + positive_sign);
