@@ -130,12 +130,15 @@ public class G018HW3 {
         char positive_sign = '+';
         char negative_sign = '-';
 
-        reservoir.sort(Long::compareTo);
         System.out.println("RESERVOIR SAMPLING");
         System.out.println("Size m of the sample = " + m);
-        System.out.println("Number of estimated frequent items = " + reservoir.size());
+        Set<Long> distinctReservoirMap = new HashSet<>(reservoir);
+        List<Long> distinctReservoir = new ArrayList<>(distinctReservoirMap);
+        distinctReservoir.sort(Long::compareTo);
+        System.out.println("Number of estimated frequent items = " + distinctReservoir.size());
         System.out.println("Estimated frequent items:");
-        for (Long item : reservoir) {
+
+        for (Long item : distinctReservoir) {
             if(trueFrequentItems.contains(item))
                 System.out.println(item + " " + positive_sign);
             else
