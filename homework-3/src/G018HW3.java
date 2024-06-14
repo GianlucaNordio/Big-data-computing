@@ -34,20 +34,24 @@ public class G018HW3 {
      * @throws Exception if an error occurs during processing
      */
     public static void main(String[] args) throws Exception {
+        // Validate command line arguments
         if (args.length != 5) {
             throw new IllegalArgumentException("USAGE: n, phi, epsilon, delta, portExp");
         }
 
+        // Parse command line arguments
         int n = Integer.parseInt(args[0]);
         float phi = Float.parseFloat(args[1]);
         float epsilon = Float.parseFloat(args[2]);
         float delta = Float.parseFloat(args[3]);
         int portExp = Integer.parseInt(args[4]);
 
+        // Validate that phi, epsilon, and delta are within the range (0, 1)
         if( isNotInRange(phi)  || isNotInRange(epsilon) || isNotInRange(delta) ){
             throw new IllegalArgumentException("phi, epsilon and delta must be between 0 and 1");
         }
 
+        // Print input parameters
         System.out.println("INPUT PROPERTIES");
         System.out.print("n = " + n);
         System.out.print(" phi = " + phi);
@@ -55,20 +59,22 @@ public class G018HW3 {
         System.out.print(" delta = " + delta);
         System.out.println(" port = " + portExp);
 
+        // Set up Spark configuration and streaming context
         SparkConf conf = new SparkConf(true).setMaster("local[*]").setAppName("G018HW3");
-
         JavaStreamingContext sc = new JavaStreamingContext(conf, Durations.milliseconds(10));
         sc.sparkContext().setLogLevel("ERROR");
 
         Semaphore stoppingSemaphore = new Semaphore(1);
         stoppingSemaphore.acquire();
 
+        // Initialize data structures for stream processing
         long[] streamLength = new long[1];
         streamLength[0] = 0L;
         HashMap<Long, Long> histogram = new HashMap<>();
         HashMap<Long, Long> stickySampling = new HashMap<>();
         ArrayList<Long> reservoir = new ArrayList<>();
 
+        // Calculate the sample size for reservoir sampling
         int m = (int) Math.ceil(1 / phi);
         Random random = new Random();
 
@@ -77,6 +83,7 @@ public class G018HW3 {
                     if (streamLength[0] < n) {
                         long batchSize = batch.count();
 
+                        // Adjust batch size if it exceeds the remaining required item
                         if(batchSize + streamLength[0] > n)
                             batchSize = n - streamLength[0];
 
@@ -85,8 +92,10 @@ public class G018HW3 {
                         for (Long item : elements){
                             counter++;
 
+                            // Update the exact histogram
                             histogram.put(item, histogram.getOrDefault(item, 0L) + 1);
 
+                            // Update sticky sampling
                             if (stickySampling.containsKey(item)) {
                                 stickySampling.put(item, stickySampling.get(item) + 1);
                             } else {
@@ -98,6 +107,7 @@ public class G018HW3 {
                                 }
                             }
 
+                            // Update reservoir sampling
                             int size = reservoir.size();
                             if (size < m) {
                                 reservoir.add(item);
@@ -110,12 +120,14 @@ public class G018HW3 {
                                 }
                             }
 
+                            // Stop processing if the batch size limit is reached
                             if(batchSize == counter)
                                 break;
                         }
 
                         streamLength[0] += batchSize;
 
+                        // Release the semaphore if the stream length reaches n
                         if (streamLength[0] >= n) {
                             stoppingSemaphore.release();
                         }
@@ -125,6 +137,8 @@ public class G018HW3 {
         sc.start();
         stoppingSemaphore.acquire();
         sc.stop(false, false);
+
+        // Print results of the exact algorithm
         System.out.println("EXACT ALGORITHM");
         System.out.println("Number of items in the data structure = " + histogram.size());
 
@@ -147,6 +161,7 @@ public class G018HW3 {
         char positive_sign = '+';
         char negative_sign = '-';
 
+        // Print results of reservoir sampling
         System.out.println("RESERVOIR SAMPLING");
         System.out.println("Size m of the sample = " + m);
         Set<Long> distinctReservoir = new TreeSet<>(reservoir);
@@ -161,6 +176,7 @@ public class G018HW3 {
                 System.out.println(item + " " + negative_sign);
         }
 
+        // Print results of sticky sampling
         System.out.println("STICKY SAMPLING");
         System.out.println("Number of items in the Hash Table = " + stickySampling.size());
         ArrayList<Long> stickyFrequentItems = new ArrayList<>();
