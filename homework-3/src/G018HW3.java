@@ -8,12 +8,31 @@ import java.util.*;
 
 import java.util.concurrent.Semaphore;
 
+/**
+ * G018HW3 is a program that processes streaming data using Apache Spark and implements exact 
+ * and approximate frequent item algorithms.
+ * Group 18
+ * Authors: Lorenzo Cazzador, Giovanni Cinel, Gianluca Nordio
+ */
 public class G018HW3 {
 
+    /**
+     * Checks if a given value is not in the range (0, 1).
+     *
+     * @param value the value to check
+     * @return true if the value is <= 0 or >= 1, false otherwise
+     */
     public static boolean isNotInRange(double value) {
         return value <= 0 || value >= 1;
     }
 
+    /**
+     * The main method that initializes Spark Streaming, processes the stream, and performs 
+     * exact and approximate frequent item calculations.
+     *
+     * @param args command line arguments: n, phi, epsilon, delta, portExp
+     * @throws Exception if an error occurs during processing
+     */
     public static void main(String[] args) throws Exception {
         if (args.length != 5) {
             throw new IllegalArgumentException("USAGE: n, phi, epsilon, delta, portExp");
