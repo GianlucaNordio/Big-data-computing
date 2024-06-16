@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.Semaphore;
 
 /**
- * G018HW3 is a program that processes streaming data using Apache Spark and implements exact 
+ * Processes streaming data and implements exact 
  * and approximate frequent item algorithms.
  * Group 18
  * Authors: Lorenzo Cazzador, Giovanni Cinel, Gianluca Nordio
